@@ -78,7 +78,8 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 | `setup.sh` | 🚀 Configurador automático | Gerar arquivos para novo projeto |
 | `QUICK_START.md` | ⚡ Guia rápido | Primeiro deploy (30 min) |
 | `README.md` | 📖 Visão geral | Entender o projeto |
-| `DEPLOY_VPS.md` | 📚 Guia completo | Configurar VPS ou troubleshooting |
+| `DEPLOY_VPS.md` | 📚 Guia simplificado | Comandos e fluxo principal |
+| `DEPLOY_VPS_ADVANCED.md` | 🔬 Referência técnica | YAMLs completos e detalhes |
 | `FILE_STRUCTURE.md` | 📁 Estrutura | Entender arquivos gerados |
 
 ## 📂 Estrutura de Pastas

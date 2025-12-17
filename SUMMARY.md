@@ -11,13 +11,14 @@
 📦 CONTEÚDO DA PASTA kubernetes-vps-setup/
 ═══════════════════════════════════════════════════════════════════════
 
-📚 DOCUMENTAÇÃO (7 arquivos)
+📚 DOCUMENTAÇÃO (8 arquivos)
 ─────────────────────────────────────────────────────────────────────
 
   📖 INDEX.md               Índice principal e guia de navegação
   ⚡ QUICK_START.md         Deploy em 30 minutos
   📘 README.md              Visão geral e instruções de uso
-  📚 DEPLOY_VPS.md          Guia completo (PARTE 1 + PARTE 2)
+  📚 DEPLOY_VPS.md          Guia simplificado (PARTE 1 + PARTE 2)
+  🔬 DEPLOY_VPS_ADVANCED.md Guia completo com YAMLs detalhados
   📁 FILE_STRUCTURE.md      Estrutura de arquivos explicada
   💼 EXAMPLES.md            10 exemplos de casos de uso reais
   📄 SUMMARY.md             Este arquivo
@@ -71,7 +72,7 @@
 
 
 ═══════════════════════════════════════════════════════════════════════
-TOTAL: 23 arquivos
+TOTAL: 24 arquivos
 ═══════════════════════════════════════════════════════════════════════
 
 

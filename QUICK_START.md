@@ -12,7 +12,8 @@ Antes de começar, certifique-se de ter:
 - [ ] Conta no GitHub
 - [ ] kubectl configurado localmente
 
-> 💡 **Primeira vez?** Configure a VPS primeiro seguindo a **PARTE 1** do [DEPLOY_VPS.md](DEPLOY_VPS.md)
+> 💡 **Primeira vez?** Configure a VPS primeiro seguindo a **PARTE 1** do [DEPLOY_VPS.md](DEPLOY_VPS.md)  
+> 📖 **Quer detalhes?** Veja [DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md) para entender cada configuração
 
 ---
 
