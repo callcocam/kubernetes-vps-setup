@@ -52,10 +52,10 @@ cd kubernetes-vps-setup
 # Conectar na VPS
 ssh root@{{VPS_IP}}
 
-# Criar diretórios para dados
-mkdir -p /data/postgresql /data/redis
-chmod 700 /data/postgresql
-chmod 755 /data/redis
+# Criar diretórios para dados (isolados por namespace)
+mkdir -p /data/postgresql/{{NAMESPACE}} /data/redis/{{NAMESPACE}}
+chmod 700 /data/postgresql/{{NAMESPACE}}
+chmod 755 /data/redis/{{NAMESPACE}}
 
 # Verificar se tudo está OK
 kubectl get nodes

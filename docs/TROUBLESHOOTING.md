@@ -120,6 +120,258 @@ kubectl apply -f kubernetes/migration-job.yaml
 
 ---
 
+## 🔴 Mixed Content Error - Assets com HTTP em site HTTPS
+
+### Sintomas
+```
+Mixed Content: The page at 'https://seu-dominio.com' was loaded over HTTPS, 
+but requested an insecure stylesheet 'http://seu-dominio.com/build/assets/app.css'
+```
+
+No navegador:
+- Site carrega via HTTPS (🔒)
+- CSS/JS tentam carregar via HTTP
+- Assets bloqueados pelo navegador
+- Site aparece sem estilos
+
+### Causa
+Laravel está gerando URLs com `http://` ao invés de `https://` porque não detecta que está atrás de um proxy HTTPS (Nginx Ingress).
+
+### Solução
+
+#### 1. Verificar APP_URL no ConfigMap
+```bash
+kubectl get configmap app-config -n meu-app -o yaml | grep APP_URL
+
+# Deve mostrar:
+# APP_URL: "https://seu-dominio.com"  ← com HTTPS!
+```
+
+Se estiver com `http://`, corrigir:
+```bash
+# Editar kubernetes/configmap.yaml
+# APP_URL: "https://{{DOMAIN}}"
+
+kubectl apply -f kubernetes/configmap.yaml
+kubectl rollout restart deployment/app -n meu-app
+```
+
+#### 2. Configurar TrustProxies (Laravel 11+)
+
+**Criar/Editar:** `bootstrap/app.php` ou `app/Http/Middleware/TrustProxies.php`
+
+```php
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withMiddleware(function (Middleware $middleware) {
+        // Confiar em todos os proxies (Kubernetes/Nginx)
+        $middleware->trustProxies(at: '*');
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
+```
+
+**Ou para Laravel 10 e anteriores:**
+
+`app/Http/Middleware/TrustProxies.php`:
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
+use Illuminate\Http\Request;
+
+class TrustProxies extends Middleware
+{
+    /**
+     * The trusted proxies for this application.
+     *
+     * @var array<int, string>|string|null
+     */
+    protected $proxies = '*'; // Confiar em todos os proxies
+
+    /**
+     * The headers that should be used to detect proxies.
+     *
+     * @var int
+     */
+    protected $headers =
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO |
+        Request::HEADER_X_FORWARDED_AWS_ELB;
+}
+```
+
+#### 3. Forçar HTTPS no AppServiceProvider
+
+**Editar:** `app/Providers/AppServiceProvider.php`
+
+```php
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        // Forçar HTTPS em produção
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+        
+        // Ou sempre forçar se APP_ENV não for local
+        if (!$this->app->environment('local')) {
+            URL::forceScheme('https');
+        }
+    }
+}
+```
+
+#### 4. Rebuild e Deploy
+
+```bash
+# Commit as mudanças
+git add .
+git commit -m "fix: configure TrustProxies for HTTPS behind Nginx Ingress"
+git push origin main
+
+# Aguardar GitHub Actions
+gh run watch
+```
+
+### Verificação
+
+```bash
+# 1. Verificar APP_URL no pod
+kubectl exec deployment/app -n meu-app -- env | grep APP_URL
+# Deve mostrar: APP_URL=https://seu-dominio.com
+
+# 2. Limpar cache do Laravel
+kubectl exec deployment/app -n meu-app -- php artisan config:clear
+kubectl exec deployment/app -n meu-app -- php artisan cache:clear
+
+# 3. Testar no navegador
+# Abrir DevTools (F12) → Console
+# Não deve ter erros de Mixed Content
+```
+
+### Prevenção
+
+**Sempre configure em novos projetos Laravel:**
+
+1. ✅ `APP_URL=https://` no ConfigMap
+2. ✅ `TrustProxies` configurado
+3. ✅ `URL::forceScheme('https')` em produção
+
+---
+
+## 🔴 Bug #4: Múltiplos Apps Compartilhando Mesmo Diretório PostgreSQL/Redis
+
+### Sintomas
+```bash
+# Diferentes apps na mesma VPS com problemas:
+# - Migrations de um app afetam outro
+# - Dados misturados entre apps
+# - Usuário de um app não existe em outro
+# - Cache Redis compartilhado entre apps
+```
+
+### Causa
+Todos os apps estavam usando os MESMOS diretórios:
+- `/data/postgresql` ← TODOS os apps!
+- `/data/redis` ← TODOS os apps!
+
+Isso causa **conflito total de dados**!
+
+### Solução
+
+**✅ JÁ CORRIGIDO no template atual!**
+
+Agora cada app usa seu próprio diretório:
+- `/data/postgresql/siscom`
+- `/data/postgresql/kb-app`
+- `/data/postgresql/fastconverter`
+
+### Migrar Apps Existentes
+
+Se você tem apps já deployados com o template antigo:
+
+```bash
+# 1. Na VPS, criar novos diretórios isolados
+ssh root@SEU_IP_VPS
+
+# Para cada app:
+mkdir -p /data/postgresql/siscom /data/redis/siscom
+mkdir -p /data/postgresql/kb-app /data/redis/kb-app
+mkdir -p /data/postgresql/fastconverter /data/redis/fastconverter
+
+chmod 700 /data/postgresql/*
+chmod 755 /data/redis/*
+
+exit
+
+# 2. Atualizar kubernetes/postgres.yaml de cada app
+# Editar linha do hostPath:
+#   path: /data/postgresql/SEU_NAMESPACE  ← adicionar namespace!
+
+# 3. Atualizar kubernetes/redis.yaml de cada app
+#   path: /data/redis/SEU_NAMESPACE  ← adicionar namespace!
+
+# 4. Para cada app, fazer reset:
+kubectl delete statefulset postgres redis -n siscom
+kubectl delete pvc postgres-pvc redis-pvc -n siscom
+
+# 5. Recriar com novos paths:
+kubectl apply -f kubernetes/postgres.yaml
+kubectl apply -f kubernetes/redis.yaml
+
+# 6. Executar migrations:
+kubectl apply -f kubernetes/migration-job.yaml
+```
+
+### Prevenção
+**Sempre use template atualizado!**
+
+Verifique seus arquivos:
+```bash
+# postgres.yaml deve ter:
+  hostPath:
+    path: /data/postgresql/{{NAMESPACE}}
+
+# redis.yaml deve ter:
+  hostPath:
+    path: /data/redis/{{NAMESPACE}}
+```
+
+### Estrutura Correta na VPS
+```
+/data/
+├── postgresql/
+│   ├── siscom/       ← Banco do siscom
+│   ├── kb-app/       ← Banco do kb-app
+│   └── fastconverter/ ← Banco do fastconverter
+└── redis/
+    ├── siscom/       ← Cache do siscom
+    ├── kb-app/       ← Cache do kb-app
+    └── fastconverter/ ← Cache do fastconverter
+```
+
+---
+
 ## ⚠️ Pods em ImagePullBackOff
 
 ### Sintomas

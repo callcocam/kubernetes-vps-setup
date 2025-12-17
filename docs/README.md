@@ -33,6 +33,8 @@ Esta pasta contém toda a documentação para configurar e fazer deploy do proje
 - **[MULTIPLE_APPS.md](MULTIPLE_APPS.md)** - Rodar múltiplos apps Laravel na mesma VPS
 - **[EXAMPLES.md](EXAMPLES.md)** - Exemplos de casos de uso reais
 - **[SUMMARY.md](SUMMARY.md)** - Resumo da estrutura completa
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Problemas comuns e soluções
+- **[LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - Configurar Laravel para HTTPS
 
 ## 🚀 Fluxo Recomendado
 

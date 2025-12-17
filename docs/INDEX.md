@@ -41,7 +41,19 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
    - Para quem quer entender a fundo
    - Troubleshooting detalhado
 
-7. **[💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
+7. **[� TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - **Problemas Comuns**
+   - Bugs conhecidos e soluções
+   - Mixed Content, ImagePullBackOff, SSL, etc.
+   - Comandos de debug e emergência
+   - Checklist de validação
+
+8. **[🔒 LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - **Configurar HTTPS**
+   - TrustProxies para Kubernetes
+   - Forçar HTTPS em produção
+   - Resolver Mixed Content
+   - Configuração pós-deploy
+
+9. **[�💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
    - Cenários reais de uso
    - Configurações específicas
    - Casos de uso avançados

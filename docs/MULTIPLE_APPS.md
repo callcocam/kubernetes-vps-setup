@@ -62,10 +62,46 @@ VPS ({{VPS_IP}})
 ### O Que é Isolado
 
 - ✅ Namespace (isolamento lógico)
-- ✅ PostgreSQL (banco dedicado)
-- ✅ Redis (cache dedicado)
+- ✅ PostgreSQL (banco dedicado em `/data/postgresql/NAMESPACE/`)
+- ✅ Redis (cache dedicado em `/data/redis/NAMESPACE/`)
 - ✅ Secrets e ConfigMaps
 - ✅ Código da aplicação
+
+> ⚠️ **IMPORTANTE**: Cada app TEM SEU PRÓPRIO diretório de dados na VPS!
+> - **ERRADO**: `/data/postgresql` ← Todos os apps compartilham (BUG!)
+> - **CORRETO**: `/data/postgresql/siscom`, `/data/postgresql/kb-app`, etc.
+
+---
+
+## ⚠️ Estrutura de Diretórios na VPS (CRÍTICO!)
+
+Cada aplicação **PRECISA** ter seus diretórios isolados:
+
+```bash
+# Na VPS, estrutura correta:
+/data/
+├── postgresql/
+│   ├── siscom/       ← Banco do app siscom
+│   ├── kb-app/       ← Banco do app kb-app
+│   └── fastconverter/ ← Banco do app fastconverter
+└── redis/
+    ├── siscom/       ← Cache do app siscom
+    ├── kb-app/       ← Cache do app kb-app
+    └── fastconverter/ ← Cache do app fastconverter
+```
+
+**Criar diretórios ANTES de aplicar manifests:**
+
+```bash
+# Para cada novo app:
+ssh root@SEU_IP_VPS
+mkdir -p /data/postgresql/NOME_DO_APP /data/redis/NOME_DO_APP
+chmod 700 /data/postgresql/NOME_DO_APP
+chmod 755 /data/redis/NOME_DO_APP
+exit
+```
+
+> 🔴 **Se você NÃO fizer isso, múltiplos apps vão compartilhar o mesmo banco de dados e cache!**
 
 ---
 
