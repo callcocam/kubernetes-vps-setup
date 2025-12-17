@@ -228,13 +228,13 @@ cd kubernetes-vps-setup
 Variáveis disponíveis nos templates:
 
 | Variável | Exemplo | Onde usar |
-|----------|---------|-----------|
+|----------|---------|--------- --|
 | `{{PROJECT_NAME}}` | meu-app | Nomes, labels |
 | `{{NAMESPACE}}` | meu-app | Namespace K8s |
 | `{{DOMAIN}}` | app.exemplo.com | Ingress, URLs |
 | `{{VPS_IP}}` | 203.0.113.10 | Documentação |
-| `{{DOCKER_USERNAME}}` | usuario | Imagens Docker |
-| `{{DOCKER_IMAGE}}` | usuario/meu-app | Deployment |
+| `{{GITHUB_USER}}` | usuario | GitHub |
+| `{{GITHUB_REPO}}` | usuario/projeto | Imagens Docker (ghcr.io) |
 | `{{APP_KEY}}` | base64:... | Laravel |
 | `{{APP_EMAIL}}` | admin@exemplo.com | Cert-manager |
 | `{{DB_NAME}}` | laravel | PostgreSQL |

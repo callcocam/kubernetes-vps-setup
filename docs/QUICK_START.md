@@ -323,9 +323,10 @@ kubectl get events -n {{NAMESPACE}} --sort-by='.lastTimestamp'
 
 ## 🆘 Precisa de Ajuda?
 
-1. **Documentação Completa**: [DEPLOY_VPS.md](DEPLOY_VPS.md)
-2. **Troubleshooting Detalhado**: Seção 11 do DEPLOY_VPS.md
-3. **Templates e Customização**: [README.md](README.md)
+1. **🐛 Problemas Comuns**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - **COMECE AQUI!**
+2. **Documentação Completa**: [DEPLOY_VPS.md](DEPLOY_VPS.md)
+3. **Troubleshooting Detalhado**: Seção 11 do DEPLOY_VPS.md
+4. **Templates e Customização**: [README.md](README.md)
 
 ---
 

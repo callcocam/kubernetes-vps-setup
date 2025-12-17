@@ -31,7 +31,7 @@ Nome do projeto: minha-loja
 Namespace: loja-prod
 Domínio: minhaloja.com
 IP VPS: 159.89.123.45
-Docker Hub user: joaosilva
+GitHub: joaosilva/minha-loja
 APP_KEY: [ENTER - gera automático]
 Email: admin@minhaloja.com
 Database: loja_db

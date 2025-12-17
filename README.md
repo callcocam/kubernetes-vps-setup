@@ -33,7 +33,7 @@ O script vai perguntar:
 - 📦 Nome do projeto
 - 🌐 Domínio
 - 🖥️ IP da VPS
-- 🐳 Usuário Docker Hub
+- � Usuário/Organização GitHub
 - 🔑 Senhas (ou gera automaticamente)
 - ⚙️ Recursos (CPU/Memória)
 
@@ -113,8 +113,8 @@ As variáveis disponíveis são:
 {{NAMESPACE}}         - Namespace Kubernetes
 {{DOMAIN}}            - Domínio da aplicação
 {{VPS_IP}}            - IP da VPS
-{{DOCKER_USERNAME}}   - Usuário Docker Hub
-{{DOCKER_IMAGE}}      - Nome da imagem Docker
+{{GITHUB_USER}}       - Usuário/Organização GitHub
+{{GITHUB_REPO}}       - Repositório completo (usuario/projeto)
 {{APP_KEY}}           - Chave do Laravel
 {{DB_NAME}}           - Nome do banco
 {{DB_USER}}           - Usuário do banco

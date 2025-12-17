@@ -197,7 +197,7 @@ kubectl rollout restart deployment/app -n seu-namespace
 
 - **Kubernetes Docs**: https://kubernetes.io/docs/
 - **Laravel Docs**: https://laravel.com/docs/
-- **Docker Hub**: https://hub.docker.com/
+- **GitHub Container Registry**: https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-container-registry
 - **GitHub Actions**: https://docs.github.com/actions
 
 ## 🆘 Problemas?
