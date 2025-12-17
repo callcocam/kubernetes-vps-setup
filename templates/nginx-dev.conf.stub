@@ -1,0 +1,60 @@
+upstream php-fpm {
+    server 127.0.0.1:9000;
+}
+
+server {
+    listen 80;
+    server_name _;
+    root /var/www/html/public;
+    index index.php index.html;
+
+    # Logs para desenvolvimento
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log debug;
+
+    # Aumentar tamanho máximo de upload
+    client_max_body_size 100M;
+
+    # Disable cache para desenvolvimento
+    add_header Cache-Control "no-cache, must-revalidate";
+    expires 0;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass php-fpm;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        include fastcgi_params;
+        
+        # Timeouts maiores para debugging
+        fastcgi_read_timeout 300;
+        fastcgi_send_timeout 300;
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Deny access to hidden files
+    location ~ /\. {
+        deny all;
+    }
+
+    # Hot Module Replacement para Vite (se usar)
+    location ~ ^/(resources|node_modules) {
+        proxy_pass http://127.0.0.1:5173;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}

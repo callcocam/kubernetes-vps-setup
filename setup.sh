@@ -17,8 +17,8 @@ NC='\033[0m' # No Color
 
 echo -e "${PURPLE}"
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║  🚀 Configurador Kubernetes para Laravel                      ║"
-echo "║  Versão 1.0.0                                                  ║"
+echo "║  🚀 Configurador para Projetos Laravel                        ║"
+echo "║  Versão 2.0.0 - Dev Local + Produção Kubernetes               ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -33,6 +33,51 @@ if [[ ! -f "$SCRIPT_DIR/templates/namespace.yaml.stub" ]]; then
     echo -e "${RED}❌ Erro: Templates não encontrados!${NC}"
     echo -e "${YELLOW}Execute este script do diretório kubernetes-vps-setup/${NC}"
     exit 1
+fi
+
+# Escolher ambiente
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}  ESCOLHA O AMBIENTE${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+
+echo -e "${CYAN}Qual ambiente deseja configurar?${NC}\n"
+echo -e "  ${YELLOW}[1]${NC} 🛠️  ${CYAN}Desenvolvimento Local${NC}"
+echo -e "      → Docker Compose"
+echo -e "      → Xdebug, Mailhog, hot-reload"
+echo -e "      → Execução manual: ${GREEN}docker-compose up${NC}"
+echo ""
+echo -e "  ${YELLOW}[2]${NC} 🚀 ${CYAN}Produção (Kubernetes + GitHub Actions)${NC}"
+echo -e "      → Deploy automático via GitHub Actions"
+echo -e "      → Kubernetes em VPS"
+echo -e "      → Você só faz commit/push"
+echo ""
+echo -e "  ${YELLOW}[3]${NC} 🔧 ${CYAN}Ambos (Local + Produção)${NC}"
+echo -e "      → Desenvolvimento local + Deploy automático"
+echo -e "      → Melhor opção para times"
+echo ""
+read -p "Escolha (1, 2 ou 3): " ENVIRONMENT_CHOICE
+
+if [[ "$ENVIRONMENT_CHOICE" != "1" && "$ENVIRONMENT_CHOICE" != "2" && "$ENVIRONMENT_CHOICE" != "3" ]]; then
+    echo -e "${RED}❌ Escolha inválida!${NC}"
+    exit 1
+fi
+
+SETUP_LOCAL=false
+SETUP_PROD=false
+
+if [[ "$ENVIRONMENT_CHOICE" == "1" ]]; then
+    SETUP_LOCAL=true
+    echo -e "\n${GREEN}✅ Modo: Desenvolvimento Local apenas${NC}"
+    echo -e "${YELLOW}📘 Documentação: DEV_LOCAL.md${NC}\n"
+elif [[ "$ENVIRONMENT_CHOICE" == "2" ]]; then
+    SETUP_PROD=true
+    echo -e "\n${GREEN}✅ Modo: Produção (Kubernetes + GitHub Actions)${NC}"
+    echo -e "${YELLOW}📘 Documentação: DEPLOY_VPS.md${NC}\n"
+else
+    SETUP_LOCAL=true
+    SETUP_PROD=true
+    echo -e "\n${GREEN}✅ Modo: Desenvolvimento Local + Produção${NC}"
+    echo -e "${YELLOW}📘 Dev: DEV_LOCAL.md | Produção: DEPLOY_VPS.md${NC}\n"
 fi
 
 # Função para ler input com valor padrão
@@ -77,23 +122,34 @@ echo -e "${GREEN}═════════════════════
 
 # Informações do Projeto
 read_input "📦 Nome do projeto (ex: meu-app):" "kb-app" PROJECT_NAME
-read_input "🏢 Namespace Kubernetes (ex: ${PROJECT_NAME}):" "$PROJECT_NAME" NAMESPACE
+
+if [[ "$ENV_TYPE" == "production" ]]; then
+    read_input "🏢 Namespace Kubernetes (ex: ${PROJECT_NAME}):" "$PROJECT_NAME" NAMESPACE
+fi
+
 read_input "🌐 Domínio principal (ex: app.exemplo.com):" "" DOMAIN
 
-echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  INFORMAÇÕES DO SERVIDOR VPS${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+if [[ "$ENV_TYPE" == "production" ]]; then
+    echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}  INFORMAÇÕES DO SERVIDOR VPS${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Informações do Servidor
-read_input "🖥️  IP da VPS:" "" VPS_IP
+    # Informações do Servidor
+    read_input "🖥️  IP da VPS:" "" VPS_IP
 
-echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  DOCKER HUB${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+    echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}  DOCKER HUB${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Docker Hub
-read_input "🐳 Usuário do Docker Hub:" "" DOCKER_USERNAME
-DOCKER_IMAGE="${DOCKER_USERNAME}/${PROJECT_NAME}"
+    # Docker Hub
+    read_input "🐳 Usuário do Docker Hub:" "" DOCKER_USERNAME
+    DOCKER_IMAGE="${DOCKER_USERNAME}/${PROJECT_NAME}"
+else
+    NAMESPACE="$PROJECT_NAME"
+    VPS_IP="localhost"
+    DOCKER_USERNAME="local"
+    DOCKER_IMAGE="local/${PROJECT_NAME}"
+fi
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}  CONFIGURAÇÕES DO LARAVEL${NC}"
@@ -209,15 +265,25 @@ if [[ "$confirm" != "s" && "$confirm" != "S" ]]; then
 fi
 
 # Criar diretórios de output
-OUTPUT_DIR="$PROJECT_ROOT/kubernetes"
-DOCKER_DIR="$PROJECT_ROOT/docker"
-GITHUB_DIR="$PROJECT_ROOT/.github/workflows"
-
-echo -e "\n${YELLOW}⏳ Criando estrutura de diretórios...${NC}"
-mkdir -p "$OUTPUT_DIR"
-mkdir -p "$DOCKER_DIR/nginx"
-mkdir -p "$DOCKER_DIR/supervisor"
-mkdir -p "$GITHUB_DIR"
+if [[ "$ENV_TYPE" == "local" ]]; then
+    OUTPUT_DIR="$PROJECT_ROOT"
+    DOCKER_DIR="$PROJECT_ROOT/docker"
+    
+    echo -e "\n${YELLOW}⏳ Criando estrutura de diretórios...${NC}"
+    mkdir -p "$DOCKER_DIR/nginx"
+    mkdir -p "$DOCKER_DIR/supervisor"
+    mkdir -p "$DOCKER_DIR/php"
+else
+    OUTPUT_DIR="$PROJECT_ROOT/kubernetes"
+    DOCKER_DIR="$PROJECT_ROOT/docker"
+    GITHUB_DIR="$PROJECT_ROOT/.github/workflows"
+    
+    echo -e "\n${YELLOW}⏳ Criando estrutura de diretórios...${NC}"
+    mkdir -p "$OUTPUT_DIR"
+    mkdir -p "$DOCKER_DIR/nginx"
+    mkdir -p "$DOCKER_DIR/supervisor"
+    mkdir -p "$GITHUB_DIR"
+fi
 
 # Função para processar template
 process_template() {
@@ -249,41 +315,78 @@ process_template() {
     sed -i "s|{{CPU_REQUEST}}|${CPU_REQUEST}|g" "$output_file"
     sed -i "s|{{CPU_LIMIT}}|${CPU_LIMIT}|g" "$output_file"
     sed -i "s|{{REPLICAS}}|${REPLICAS}|g" "$output_file"
+    sed -i "s|{{DB_DATABASE}}|${DB_NAME}|g" "$output_file"
+    sed -i "s|{{DB_USERNAME}}|${DB_USER}|g" "$output_file"
+    sed -i "s|{{APP_NAME}}|${PROJECT_NAME}|g" "$output_file"
     
     echo -e "${GREEN}✅${NC} $(basename "$output_file")"
 }
 
-echo -e "\n${YELLOW}⏳ Gerando arquivos Kubernetes...${NC}"
+if [[ "$ENV_TYPE" == "local" ]]; then
+    echo -e "\n${YELLOW}⏳ Gerando arquivos para Desenvolvimento Local...${NC}"
+    
+    # Docker Compose
+    process_template "$SCRIPT_DIR/templates/docker-compose.yml.stub" "$PROJECT_ROOT/docker-compose.yml"
+    
+    # Dockerfile para dev
+    process_template "$SCRIPT_DIR/templates/Dockerfile.dev.stub" "$PROJECT_ROOT/Dockerfile.dev"
+    
+    # Nginx dev
+    process_template "$SCRIPT_DIR/templates/nginx-dev.conf.stub" "$DOCKER_DIR/nginx/dev.conf"
+    
+    # Supervisor dev
+    process_template "$SCRIPT_DIR/templates/supervisord-dev.conf.stub" "$DOCKER_DIR/supervisor/supervisord-dev.conf"
+    
+    # PHP config
+    process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DOCKER_DIR/php/local.ini"
+    
+    # .env.local
+    process_template "$SCRIPT_DIR/templates/env.local.stub" "$PROJECT_ROOT/.env.local"
+    
+    # .dockerignore
+    if [[ ! -f "$PROJECT_ROOT/.dockerignore" ]]; then
+        process_template "$SCRIPT_DIR/templates/.dockerignore.stub" "$PROJECT_ROOT/.dockerignore"
+    fi
+    
+else
+    echo -e "\n${YELLOW}⏳ Gerando arquivos Kubernetes...${NC}"
 
-# Processar templates Kubernetes
-process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$OUTPUT_DIR/namespace.yaml"
-process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$OUTPUT_DIR/secrets.yaml"
-process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$OUTPUT_DIR/configmap.yaml"
-process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$OUTPUT_DIR/postgres.yaml"
-process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$OUTPUT_DIR/redis.yaml"
-process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$OUTPUT_DIR/deployment.yaml"
-process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$OUTPUT_DIR/service.yaml"
-process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$OUTPUT_DIR/ingress.yaml"
-process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert-issuer.yaml"
-process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
+    # Processar templates Kubernetes
+    process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$OUTPUT_DIR/namespace.yaml"
+    process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$OUTPUT_DIR/secrets.yaml"
+    process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$OUTPUT_DIR/configmap.yaml"
+    process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$OUTPUT_DIR/postgres.yaml"
+    process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$OUTPUT_DIR/redis.yaml"
+    process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$OUTPUT_DIR/deployment.yaml"
+    process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$OUTPUT_DIR/service.yaml"
+    process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$OUTPUT_DIR/ingress.yaml"
+    process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert-issuer.yaml"
+    process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
 
-echo -e "\n${YELLOW}⏳ Gerando arquivos Docker...${NC}"
+    echo -e "\n${YELLOW}⏳ Gerando arquivos Docker...${NC}"
 
-# Processar templates Docker
-process_template "$SCRIPT_DIR/Dockerfile.stub" "$PROJECT_ROOT/Dockerfile"
-process_template "$SCRIPT_DIR/docker/nginx/default.conf.stub" "$DOCKER_DIR/nginx/default.conf"
-process_template "$SCRIPT_DIR/docker/supervisor/supervisord.conf.stub" "$DOCKER_DIR/supervisor/supervisord.conf"
-process_template "$SCRIPT_DIR/.dockerignore.stub" "$PROJECT_ROOT/.dockerignore"
+    # Processar templates Docker
+    process_template "$SCRIPT_DIR/Dockerfile.stub" "$PROJECT_ROOT/Dockerfile"
+    process_template "$SCRIPT_DIR/docker/nginx/default.conf.stub" "$DOCKER_DIR/nginx/default.conf"
+    process_template "$SCRIPT_DIR/docker/supervisor/supervisord.conf.stub" "$DOCKER_DIR/supervisor/supervisord.conf"
+    process_template "$SCRIPT_DIR/.dockerignore.stub" "$PROJECT_ROOT/.dockerignore"
 
-echo -e "\n${YELLOW}⏳ Gerando GitHub Actions...${NC}"
+    echo -e "\n${YELLOW}⏳ Gerando GitHub Actions...${NC}"
 
-# Processar template GitHub Actions
-process_template "$SCRIPT_DIR/.github/workflows/deploy.yml.stub" "$GITHUB_DIR/deploy.yml"
+    # Processar template GitHub Actions
+    process_template "$SCRIPT_DIR/.github/workflows/deploy.yml.stub" "$GITHUB_DIR/deploy.yml"
+fi
 
 # Criar arquivo de configuração para referência
-CONFIG_FILE="$OUTPUT_DIR/.config"
+if [[ "$ENV_TYPE" == "production" ]]; then
+    CONFIG_FILE="$OUTPUT_DIR/.config"
+else
+    CONFIG_FILE="$PROJECT_ROOT/.env.local.config"
+fi
+
 cat > "$CONFIG_FILE" << EOF
 # Configuração gerada em $(date)
+ENVIRONMENT=${ENV_TYPE}
 PROJECT_NAME=${PROJECT_NAME}
 NAMESPACE=${NAMESPACE}
 DOMAIN=${DOMAIN}
@@ -298,30 +401,75 @@ echo -e "\n${GREEN}════════════════════�
 echo -e "${GREEN}  ✅ ARQUIVOS GERADOS COM SUCESSO!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-echo -e "${CYAN}📂 Arquivos criados em:${NC}"
-echo -e "  ${GREEN}kubernetes/${NC} - Configurações Kubernetes"
-echo -e "  ${GREEN}docker/${NC} - Configurações Docker"
-echo -e "  ${GREEN}.github/workflows/${NC} - CI/CD"
-echo -e "  ${GREEN}Dockerfile${NC} - Build da imagem"
+if [[ "$ENV_TYPE" == "local" ]]; then
+    echo -e "${CYAN}📂 Arquivos criados:${NC}"
+    echo -e "  ${GREEN}docker-compose.yml${NC} - Orquestração dos containers"
+    echo -e "  ${GREEN}Dockerfile.dev${NC} - Build para desenvolvimento"
+    echo -e "  ${GREEN}.env.local${NC} - Variáveis de ambiente"
+    echo -e "  ${GREEN}docker/${NC} - Configurações Nginx, Supervisor e PHP"
+    
+    echo -e "\n${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${PURPLE}  📋 PRÓXIMOS PASSOS - DESENVOLVIMENTO LOCAL${NC}"
+    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}\n"
+    
+    echo -e "${YELLOW}1.${NC} ${CYAN}Copiar arquivo de ambiente:${NC}"
+    echo -e "   ${GREEN}cp .env.local .env${NC}"
+    echo -e ""
+    echo -e "${YELLOW}2.${NC} ${CYAN}Subir containers:${NC}"
+    echo -e "   ${GREEN}docker-compose up -d${NC}"
+    echo -e ""
+    echo -e "${YELLOW}3.${NC} ${CYAN}Instalar dependências:${NC}"
+    echo -e "   ${GREEN}docker-compose exec app composer install${NC}"
+    echo -e "   ${GREEN}docker-compose exec app npm install${NC}"
+    echo -e ""
+    echo -e "${YELLOW}4.${NC} ${CYAN}Executar migrations:${NC}"
+    echo -e "   ${GREEN}docker-compose exec app php artisan migrate${NC}"
+    echo -e ""
+    echo -e "${YELLOW}5.${NC} ${CYAN}Acessar aplicação:${NC}"
+    echo -e "   🌐 App: ${GREEN}http://localhost:8000${NC}"
+    echo -e "   📧 Mailhog: ${GREEN}http://localhost:8025${NC}"
+    echo -e ""
+    echo -e "${CYAN}📖 Documentação completa: ${GREEN}kubernetes-vps-setup/DEV_LOCAL.md${NC}"
+    echo -e "${CYAN}🐛 Debug com Xdebug configurado e pronto!${NC}"
+    
+else
+    echo -e "${CYAN}📂 Arquivos criados em:${NC}"
+    echo -e "  ${GREEN}kubernetes/${NC} - Configurações Kubernetes"
+    echo -e "  ${GREEN}docker/${NC} - Configurações Docker"
+    echo -e "  ${GREEN}.github/workflows/${NC} - CI/CD"
+    echo -e "  ${GREEN}Dockerfile${NC} - Build da imagem"
 
-echo -e "\n${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${PURPLE}  📋 PRÓXIMOS PASSOS${NC}"
-echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}\n"
+    echo -e "\n${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${PURPLE}  📋 PRÓXIMOS PASSOS - PRODUÇÃO${NC}"
+    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════${NC}\n"
 
-echo -e "${YELLOW}1.${NC} ${CYAN}Na VPS, criar os diretórios de dados:${NC}"
-echo -e "   ${GREEN}ssh root@${VPS_IP}${NC}"
-echo -e "   ${GREEN}mkdir -p /data/postgresql /data/redis${NC}"
-echo -e "   ${GREEN}chmod 700 /data/postgresql && chmod 755 /data/redis${NC}"
-echo -e ""
-echo -e "${YELLOW}2.${NC} ${CYAN}Configurar GitHub Secrets:${NC}"
-echo -e "   ${GREEN}gh secret set DOCKER_HUB_USERNAME --body \"${DOCKER_USERNAME}\"${NC}"
-echo -e "   ${GREEN}gh secret set DOCKER_HUB_TOKEN${NC}"
-echo -e "   ${GREEN}gh secret set APP_KEY --body \"${APP_KEY}\"${NC}"
-echo -e "   ${GREEN}gh secret set KUBECONFIG < ~/.kube/config${NC}"
-echo -e ""
-echo -e "${YELLOW}3.${NC} ${CYAN}Configurar DNS (no seu provedor):${NC}"
-echo -e "   Tipo: ${GREEN}A${NC}"
-echo -e "   Nome: ${GREEN}@${NC}"
+    echo -e "${YELLOW}1.${NC} ${CYAN}Na VPS, criar os diretórios de dados:${NC}"
+    echo -e "   ${GREEN}ssh root@${VPS_IP}${NC}"
+    echo -e "   ${GREEN}mkdir -p /data/postgresql /data/redis${NC}"
+    echo -e "   ${GREEN}chmod 700 /data/postgresql && chmod 755 /data/redis${NC}"
+    echo -e ""
+    echo -e "${YELLOW}2.${NC} ${CYAN}Configurar GitHub Secrets:${NC}"
+    echo -e "   ${GREEN}gh secret set DOCKER_HUB_USERNAME --body \"${DOCKER_USERNAME}\"${NC}"
+    echo -e "   ${GREEN}gh secret set DOCKER_HUB_TOKEN${NC}"
+    echo -e "   ${GREEN}gh secret set APP_KEY --body \"${APP_KEY}\"${NC}"
+    echo -e "   ${GREEN}gh secret set KUBECONFIG < ~/.kube/config${NC}"
+    echo -e ""
+    echo -e "${YELLOW}3.${NC} ${CYAN}Configurar DNS (no seu provedor):${NC}"
+    echo -e "   Tipo: ${GREEN}A${NC}"
+    echo -e "   Nome: ${GREEN}@${NC}"
+    echo -e "   Valor: ${GREEN}${VPS_IP}${NC}"
+    echo -e "   TTL: ${GREEN}3600${NC}"
+    echo -e ""
+    echo -e "${YELLOW}4.${NC} ${CYAN}Aplicar configurações Kubernetes:${NC}"
+    echo -e "   ${GREEN}kubectl apply -f kubernetes/${NC}"
+    echo -e ""
+    echo -e "${YELLOW}5.${NC} ${CYAN}Fazer commit e push para deploy automático:${NC}"
+    echo -e "   ${GREEN}git add .${NC}"
+    echo -e "   ${GREEN}git commit -m \"chore: Add Kubernetes configuration\"${NC}"
+    echo -e "   ${GREEN}git push${NC}"
+    echo -e ""
+    echo -e "${CYAN}📖 Documentação: ${GREEN}kubernetes-vps-setup/DEPLOY_VPS.md${NC}"
+fi
 echo -e "   Valor: ${GREEN}${VPS_IP}${NC}"
 echo -e ""
 echo -e "${YELLOW}4.${NC} ${CYAN}Fazer primeiro deploy:${NC}"
