@@ -372,6 +372,50 @@ Verifique seus arquivos:
 
 ---
 
+## 🔴 Bug #5: Secret Name Mismatch - KUBECONFIG vs KUBE_CONFIG
+
+### Sintomas
+```bash
+# GitHub Actions falha com:
+Error: Secret "KUBE_CONFIG" not found
+
+# Ou ao contrário:
+Error: Secret "KUBECONFIG" not found
+```
+
+### Causa
+Inconsistência no nome do secret entre scripts e workflows:
+- Alguns scripts usavam `KUBECONFIG` (sem underscore)
+- Workflows usavam `KUBE_CONFIG` (com underscore)
+
+### Solução
+
+**✅ PADRONIZADO: Use sempre `KUBE_CONFIG` (com underscore)**
+
+```bash
+# CORRETO:
+gh secret set KUBE_CONFIG --body-file <(kubectl config view --flatten --minify | base64 -w 0)
+
+# OU com método manual:
+kubectl config view --flatten --minify | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
+```
+
+### Verificar Secret Existente
+
+```bash
+# Listar secrets
+gh secret list
+
+# Se aparecer KUBECONFIG (sem underscore), deletar e recriar:
+gh secret delete KUBECONFIG
+kubectl config view --flatten --minify | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
+```
+
+### Prevenção
+**Sempre use `KUBE_CONFIG`** (com underscore) - é o padrão em todos os templates atualizados.
+
+---
+
 ## ⚠️ Pods em ImagePullBackOff
 
 ### Sintomas

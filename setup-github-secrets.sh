@@ -51,18 +51,18 @@ else
 fi
 echo ""
 
-# 2. KUBECONFIG
-echo "☸️  2. KUBECONFIG (Kubernetes)"
+# 2. KUBE_CONFIG
+echo "☸️  2. KUBE_CONFIG (Kubernetes)"
 echo "Cole o conteúdo do seu ~/.kube/config (ou kubeconfig da Hostinger)"
 echo "Pressione Ctrl+D quando terminar:"
-KUBECONFIG_CONTENT=$(cat)
+KUBE_CONFIG_CONTENT=$(cat)
 
-if [ -n "$KUBECONFIG_CONTENT" ]; then
-    KUBECONFIG_BASE64=$(echo "$KUBECONFIG_CONTENT" | base64 -w 0)
-    gh secret set KUBECONFIG -b"$KUBECONFIG_BASE64" -R "$REPO"
-    echo -e "${GREEN}✅ KUBECONFIG configurado${NC}"
+if [ -n "$KUBE_CONFIG_CONTENT" ]; then
+    KUBE_CONFIG_BASE64=$(echo "$KUBE_CONFIG_CONTENT" | base64 -w 0)
+    gh secret set KUBE_CONFIG -b"$KUBE_CONFIG_BASE64" -R "$REPO"
+    echo -e "${GREEN}✅ KUBE_CONFIG configurado${NC}"
 else
-    echo -e "${YELLOW}⚠️  KUBECONFIG não configurado${NC}"
+    echo -e "${YELLOW}⚠️  KUBE_CONFIG não configurado${NC}"
 fi
 echo ""
 
