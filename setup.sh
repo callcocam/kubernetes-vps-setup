@@ -370,8 +370,11 @@ process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert
 
 echo -e "\n${YELLOW}⏳ Gerando GitHub Actions (Deploy Automático)...${NC}"
 
-# Processar template GitHub Actions
+# Processar templates GitHub Actions
 process_template "$SCRIPT_DIR/.github/workflows/deploy.yml.stub" "$GITHUB_DIR/deploy.yml"
+process_template "$SCRIPT_DIR/.github/workflows/docker-build.yml.stub" "$GITHUB_DIR/docker-build.yml"
+process_template "$SCRIPT_DIR/.github/workflows/tests.yml.stub" "$GITHUB_DIR/tests.yml"
+process_template "$SCRIPT_DIR/.github/workflows/lint.yml.stub" "$GITHUB_DIR/lint.yml"
 
 # Atualizar .gitignore para ignorar pasta .dev/
 echo -e "\n${YELLOW}⏳ Atualizando .gitignore...${NC}"

@@ -60,7 +60,10 @@ seu-projeto/
 │   └── supervisor/
 │       └── supervisord.conf
 ├── .github/workflows/       # ← CI/CD
-│   └── deploy.yml
+│   ├── deploy.yml          # Deploy automático no Kubernetes
+│   ├── docker-build.yml    # Build da imagem Docker
+│   ├── tests.yml           # Testes automatizados
+│   └── lint.yml            # Linter e formatação
 ├── Dockerfile              # ← Build da aplicação
 └── .dockerignore          # ← Arquivos ignorados
 ```
