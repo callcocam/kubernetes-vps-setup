@@ -320,7 +320,7 @@ process_template "$SCRIPT_DIR/templates/cronjob.yaml.stub" "$OUTPUT_DIR/cronjob.
          ↓ (GitHub Actions)
          │
 ┌─────────────────┐
-│   Docker Hub    │ ← Build & Push
+│   GitHub GHCR   │ ← Build & Push
 └────────┬────────┘
          │
          ↓ (kubectl apply)

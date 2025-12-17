@@ -8,8 +8,7 @@ Antes de começar, certifique-se de ter:
 
 - [ ] VPS Ubuntu 22.04 com Kubernetes configurado ([PARTE 1 do DEPLOY_VPS.md](DEPLOY_VPS.md))
 - [ ] Domínio próprio (ex: exemplo.com)
-- [ ] Conta no [Docker Hub](https://hub.docker.com)
-- [ ] Conta no GitHub
+- [ ] Conta no GitHub (usaremos GitHub Container Registry)
 - [ ] kubectl configurado localmente
 
 > 💡 **Primeira vez?** Configure a VPS primeiro seguindo a **PARTE 1** do [DEPLOY_VPS.md](DEPLOY_VPS.md)  
@@ -33,8 +32,7 @@ cd kubernetes-vps-setup
 🏢 Namespace: meu-app
 🌐 Domínio: app.exemplo.com
 🖥️  IP da VPS: 203.0.113.10
-🐳 Usuário Docker Hub: meu-usuario
-🔑 APP_KEY: [ENTER para gerar]
+ APP_KEY: [ENTER para gerar]
 📧 Email: admin@exemplo.com
 🗄️  Banco: laravel
 👤 Usuário DB: laravel
@@ -81,25 +79,19 @@ cd ~/meu-projeto
 # Autenticar
 gh auth login
 
-# Configurar secrets
-gh secret set DOCKER_HUB_USERNAME --body "meu-usuario"
-
-# Token do Docker Hub (criar em: https://hub.docker.com/settings/security)
-gh secret set DOCKER_HUB_TOKEN
-# Cole o token quando solicitado
-
 # APP_KEY (copie do output do script setup.sh)
 gh secret set APP_KEY --body "base64:sua-chave-aqui"
 
-# KUBECONFIG
-# Na VPS: cat /etc/kubernetes/admin.conf
-# Copie, substitua o IP interno pelo IP público da VPS
-# Depois cole aqui:
-gh secret set KUBECONFIG
-# Cole o conteúdo modificado
+# KUBE_CONFIG (em base64)
+# Pegar o kubeconfig da VPS e converter para base64:
+ssh root@203.0.113.10 'cat /etc/kubernetes/admin.conf' | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
 
 # Verificar
 gh secret list
+
+# Deve mostrar:
+# APP_KEY
+# KUBE_CONFIG
 ```
 
 ---
@@ -221,6 +213,12 @@ git push origin main
 # Acompanhar: gh run watch
 ```
 
+> 💡 **Importante**: O GitHub Actions possui 2 workflows:
+> 1. **Build and Push Docker Image** - Cria a imagem e envia para ghcr.io
+> 2. **Deploy to Kubernetes** - Atualiza os pods com a nova imagem
+> 
+> Ambos devem completar com sucesso (✓) para o deploy funcionar.
+
 ---
 
 ## 🐛 Problemas Comuns
@@ -268,10 +266,23 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
 
 ```bash
 # Ver erro no GitHub
-gh run view
+gh run view --log-failed
 
-# Comum: KUBECONFIG incorreto
-# Solução: Reconfigurar secret com IP público correto
+# Erros comuns:
+
+# 1. "error loading config file" ou "couldn't get version/kind"
+# Causa: KUBE_CONFIG não está em base64 ou está corrompido
+# Solução:
+ssh root@SEU_IP_VPS 'cat /etc/kubernetes/admin.conf' | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
+
+# 2. "connection refused" para o cluster
+# Causa: IP interno no kubeconfig em vez do público
+# Solução: O comando acima já pega o correto
+
+# 3. "ImagePullBackOff"
+# Causa: Imagem não foi publicada no GitHub Container Registry
+# Solução: Verificar se o workflow "Build and Push Docker Image" rodou com sucesso
+gh run list --workflow="Build and Push Docker Image"
 ```
 
 ---

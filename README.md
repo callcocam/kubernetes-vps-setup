@@ -92,8 +92,7 @@ O script mostrará os comandos necessários para:
 
 - ✅ kubectl instalado e configurado
 - ✅ Git instalado
-- ✅ Conta no Docker Hub
-- ✅ Conta no GitHub
+- ✅ Conta no GitHub (usaremos GitHub Container Registry)
 - ✅ Domínio próprio
 
 ## 🎨 Personalização
