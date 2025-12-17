@@ -21,19 +21,30 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
    - O que cada arquivo faz
    - Exemplos de customização
 
+4. **[🔄 MULTIPLE_APPS.md](MULTIPLE_APPS.md)** - **Múltiplos Apps na Mesma VPS**
+   - Como rodar vários apps Laravel na mesma VPS
+   - Cada app com domínio e SSL próprio
+   - Exemplos práticos completos
+   - Gerenciamento de recursos
+
 ### 📘 Documentação Completa
 
-4. **[📚 DEPLOY_VPS.md](DEPLOY_VPS.md)** - **Guia Completo (Simplificado)**
+5. **[📚 DEPLOY_VPS.md](DEPLOY_VPS.md)** - **Guia Completo (Simplificado)**
    - **PARTE 1**: Configuração da VPS (faça uma vez)
    - **PARTE 2**: Deploy de projetos Laravel (para cada projeto)
    - Focado em comandos e uso do `setup.sh`
    - Conceitos-chave explicados
 
-5. **[🔬 DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md)** - **Referência Técnica**
+6. **[🔬 DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md)** - **Referência Técnica**
    - Todos os YAMLs completos com explicações
    - Detalhes técnicos de cada configuração
    - Para quem quer entender a fundo
    - Troubleshooting detalhado
+
+7. **[💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
+   - Cenários reais de uso
+   - Configurações específicas
+   - Casos de uso avançados
 
 ## 🎯 Escolha seu Caminho
 
@@ -71,16 +82,27 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 4. Execute: ./setup.sh
 ```
 
+### 🔄 Quer Rodar Múltiplos Apps?
+
+```
+1. Leia: MULTIPLE_APPS.md
+2. Configure cada app com namespace único
+3. Use o mesmo IP da VPS
+4. Cada app terá seu domínio e SSL
+```
+
 ## 🛠️ Arquivos Principais
 
 | Arquivo | Propósito | Quando Usar |
 |---------|-----------|-------------|
 | `setup.sh` | 🚀 Configurador automático | Gerar arquivos para novo projeto |
 | `QUICK_START.md` | ⚡ Guia rápido | Primeiro deploy (30 min) |
+| `MULTIPLE_APPS.md` | 🔄 Múltiplos apps | Rodar vários apps na mesma VPS |
 | `README.md` | 📖 Visão geral | Entender o projeto |
 | `DEPLOY_VPS.md` | 📚 Guia simplificado | Comandos e fluxo principal |
 | `DEPLOY_VPS_ADVANCED.md` | 🔬 Referência técnica | YAMLs completos e detalhes |
 | `FILE_STRUCTURE.md` | 📁 Estrutura | Entender arquivos gerados |
+| `EXAMPLES.md` | 💼 Casos de uso | Cenários reais e avançados |
 
 ## 📂 Estrutura de Pastas
 
