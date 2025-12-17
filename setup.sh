@@ -103,12 +103,13 @@ echo -e "${GREEN}═════════════════════
 read_input "🖥️  IP da VPS:" "" VPS_IP
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  DOCKER HUB${NC}"
+echo -e "${GREEN}  GITHUB CONTAINER REGISTRY${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Docker Hub
-read_input "🐳 Usuário do Docker Hub:" "" DOCKER_USERNAME
-DOCKER_IMAGE="${DOCKER_USERNAME}/${PROJECT_NAME}"
+# GitHub Container Registry
+read_input "🐙 Usuário/Organização do GitHub:" "" GITHUB_USER
+read_input "📦 Nome do repositório GitHub:" "$PROJECT_NAME" GITHUB_REPO_NAME
+GITHUB_REPO="${GITHUB_USER}/${GITHUB_REPO_NAME}"
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}  CONFIGURAÇÕES DO LARAVEL${NC}"
@@ -198,6 +199,7 @@ echo -e "${PURPLE}════════════════════�
 
 echo -e "${CYAN}Projeto:${NC}"
 echo -e "  Nome: ${GREEN}${PROJECT_NAME}${NC}"
+echo -e "  GitHub: ${GREEN}${GITHUB_REPO}${NC}"
 echo -e "  Namespace: ${GREEN}${NAMESPACE}${NC}"
 echo -e "  Domínio: ${GREEN}${DOMAIN}${NC}"
 echo -e "  Imagem Docker: ${GREEN}${DOCKER_IMAGE}${NC}"
@@ -254,8 +256,8 @@ process_template() {
     sed -i "s|{{NAMESPACE}}|${NAMESPACE}|g" "$output_file"
     sed -i "s|{{DOMAIN}}|${DOMAIN}|g" "$output_file"
     sed -i "s|{{VPS_IP}}|${VPS_IP}|g" "$output_file"
-    sed -i "s|{{DOCKER_USERNAME}}|${DOCKER_USERNAME}|g" "$output_file"
-    sed -i "s|{{DOCKER_IMAGE}}|${DOCKER_IMAGE}|g" "$output_file"
+    sed -i "s|{{GITHUB_USER}}|${GITHUB_USER}|g" "$output_file"
+    sed -i "s|{{GITHUB_REPO}}|${GITHUB_REPO}|g" "$output_file"
     sed -i "s|{{APP_KEY}}|${APP_KEY}|g" "$output_file"
     sed -i "s|{{APP_EMAIL}}|${APP_EMAIL}|g" "$output_file"
     sed -i "s|{{DB_NAME}}|${DB_NAME}|g" "$output_file"
@@ -427,8 +429,8 @@ PROJECT_NAME=${PROJECT_NAME}
 NAMESPACE=${NAMESPACE}
 DOMAIN=${DOMAIN}
 VPS_IP=${VPS_IP}
-DOCKER_USERNAME=${DOCKER_USERNAME}
-DOCKER_IMAGE=${DOCKER_IMAGE}
+GITHUB_USER=${GITHUB_USER}
+GITHUB_REPO=${GITHUB_REPO}
 DB_NAME=${DB_NAME}
 DB_USER=${DB_USER}
 EOF

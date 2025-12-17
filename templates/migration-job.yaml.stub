@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: migration
-        image: {{DOCKER_IMAGE}}:latest
+        image: ghcr.io/{{GITHUB_REPO}}:latest
         command: ["php", "artisan", "migrate", "--force"]
         envFrom:
         - configMapRef:

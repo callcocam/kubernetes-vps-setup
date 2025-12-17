@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: {{DOCKER_IMAGE}}:latest
+        image: ghcr.io/{{GITHUB_REPO}}:latest
         ports:
         - containerPort: 80
         envFrom:
