@@ -88,8 +88,8 @@ O script mostrará os comandos necessários para:
 - ✅ cert-manager instalado
 - ✅ Firewall configurado
 
-> 💡 **Dica**: Siga a **PARTE 1** do [DEPLOY_VPS.md](DEPLOY_VPS.md) para configurar a VPS.  
-> 📖 **Detalhes técnicos**: Veja [DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md) para entender cada configuração.
+> 💡 **Dica**: Siga a **PARTE 1** do [DEPLOY_VPS.md](docs/DEPLOY_VPS.md) para configurar a VPS.  
+> 📖 **Detalhes técnicos**: Veja [DEPLOY_VPS_ADVANCED.md](docs/DEPLOY_VPS_ADVANCED.md) para entender cada configuração.
 
 ### No seu computador:
 

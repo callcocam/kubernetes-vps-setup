@@ -28,14 +28,14 @@ cd kubernetes-vps-setup
 **Responda as perguntas:**
 
 ```
-📦 Nome do projeto: meu-app
-🏢 Namespace: meu-app
-🌐 Domínio: app.exemplo.com
-🖥️  IP da VPS: 203.0.113.10
+📦 Nome do projeto: {{PROJECT_NAME}}
+🏢 Namespace: {{NAMESPACE}}
+🌐 Domínio: {{DOMAIN}}
+🖥️  IP da VPS: {{VPS_IP}}
  APP_KEY: [ENTER para gerar]
-📧 Email: admin@exemplo.com
-🗄️  Banco: laravel
-👤 Usuário DB: laravel
+📧 Email: {{APP_EMAIL}}
+🗄️  Banco: {{DB_NAME}}
+👤 Usuário DB: {{DB_USER}}
 🔐 Senha PostgreSQL: [ENTER para gerar]
 🔐 Senha Redis: [ENTER para gerar]
 ☁️  DigitalOcean Spaces: n
@@ -50,7 +50,7 @@ cd kubernetes-vps-setup
 
 ```bash
 # Conectar na VPS
-ssh root@203.0.113.10
+ssh root@{{VPS_IP}}
 
 # Criar diretórios para dados
 mkdir -p /data/postgresql /data/redis
@@ -70,7 +70,7 @@ exit
 
 ```bash
 # No diretório do projeto
-cd ~/meu-projeto
+cd ~/{{PROJECT_NAME}}
 
 # Instalar GitHub CLI (se necessário)
 # Ubuntu/Debian:
@@ -80,11 +80,11 @@ cd ~/meu-projeto
 gh auth login
 
 # APP_KEY (copie do output do script setup.sh)
-gh secret set APP_KEY --body "base64:sua-chave-aqui"
+gh secret set APP_KEY --body "{{APP_KEY}}"
 
 # KUBE_CONFIG (em base64)
 # Pegar o kubeconfig da VPS e converter para base64:
-ssh root@203.0.113.10 'cat /etc/kubernetes/admin.conf' | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
+ssh root@{{VPS_IP}} 'cat /etc/kubernetes/admin.conf' | base64 -w 0 | gh secret set KUBE_CONFIG --body-file -
 
 # Verificar
 gh secret list
@@ -102,14 +102,14 @@ No seu provedor de DNS (Cloudflare, etc):
 
 | Tipo | Nome | Valor | Proxy |
 |------|------|-------|-------|
-| A | @ | 203.0.113.10 | DNS only |
-| A | * | 203.0.113.10 | DNS only |
+| A | @ | {{VPS_IP}} | DNS only |
+| A | * | {{VPS_IP}} | DNS only |
 
 **Testar propagação:**
 
 ```bash
-dig app.exemplo.com
-# Deve retornar: 203.0.113.10
+dig {{DOMAIN}}
+# Deve retornar: {{VPS_IP}}
 ```
 
 ---
@@ -141,8 +141,8 @@ kubectl apply -f kubernetes/postgres.yaml
 kubectl apply -f kubernetes/redis.yaml
 
 # Aguardar bancos de dados ficarem prontos
-kubectl wait --for=condition=ready pod -l app=postgres -n meu-app --timeout=120s
-kubectl wait --for=condition=ready pod -l app=redis -n meu-app --timeout=120s
+kubectl wait --for=condition=ready pod -l app=postgres -n {{NAMESPACE}} --timeout=120s
+kubectl wait --for=condition=ready pod -l app=redis -n {{NAMESPACE}} --timeout=120s
 
 # Aplicar aplicação
 kubectl apply -f kubernetes/deployment.yaml
@@ -159,16 +159,16 @@ kubectl apply -f kubernetes/migration-job.yaml
 
 ```bash
 # Ver pods
-kubectl get pods -n meu-app
+kubectl get pods -n {{NAMESPACE}}
 
 # Ver certificado SSL (pode levar 2-5 minutos)
-kubectl get certificate -n meu-app
+kubectl get certificate -n {{NAMESPACE}}
 
 # Ver ingress
-kubectl get ingress -n meu-app
+kubectl get ingress -n {{NAMESPACE}}
 
 # Ver logs
-kubectl logs -f deployment/app -n meu-app
+kubectl logs -f deployment/app -n {{NAMESPACE}}
 ```
 
 **Saída esperada:**
@@ -189,10 +189,10 @@ app-tls   True    app-tls   3m
 
 ```bash
 # Testar
-curl -I https://app.exemplo.com
+curl -I https://{{DOMAIN}}
 
 # Ou abrir no navegador
-open https://app.exemplo.com
+open https://{{DOMAIN}}
 ```
 
 **✅ Se aparecer com cadeado verde, SUCESSO! 🎉**
@@ -227,20 +227,20 @@ git push origin main
 
 ```bash
 # Ver erro
-kubectl describe pod POD_NAME -n meu-app
+kubectl describe pod POD_NAME -n {{NAMESPACE}}
 
 # Ver logs
-kubectl logs POD_NAME -n meu-app
+kubectl logs POD_NAME -n {{NAMESPACE}}
 ```
 
 ### Certificado SSL não criado
 
 ```bash
 # Ver status
-kubectl describe certificate app-tls -n meu-app
+kubectl describe certificate app-tls -n {{NAMESPACE}}
 
 # Ver challenges
-kubectl get challenges -n meu-app
+kubectl get challenges -n {{NAMESPACE}}
 
 # Causas comuns:
 # - DNS não propagou (aguarde 10-30 min)
@@ -252,13 +252,13 @@ kubectl get challenges -n meu-app
 
 ```bash
 # Ver pods
-kubectl get pods -n meu-app
+kubectl get pods -n {{NAMESPACE}}
 
 # Se não estão Running, ver logs:
-kubectl logs deployment/app -n meu-app
+kubectl logs deployment/app -n {{NAMESPACE}}
 
 # Verificar ingress
-kubectl get ingress -n meu-app
+kubectl get ingress -n {{NAMESPACE}}
 kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
 ```
 
@@ -291,22 +291,22 @@ gh run list --workflow="Build and Push Docker Image"
 
 ```bash
 # Ver tudo do namespace
-kubectl get all -n meu-app
+kubectl get all -n {{NAMESPACE}}
 
 # Ver logs em tempo real
-kubectl logs -f deployment/app -n meu-app
+kubectl logs -f deployment/app -n {{NAMESPACE}}
 
 # Executar comando no pod
-kubectl exec -it deployment/app -n meu-app -- bash
+kubectl exec -it deployment/app -n {{NAMESPACE}} -- bash
 
 # Executar migrations
-kubectl exec -it deployment/app -n meu-app -- php artisan migrate
+kubectl exec -it deployment/app -n {{NAMESPACE}} -- php artisan migrate
 
 # Reiniciar deployment
-kubectl rollout restart deployment/app -n meu-app
+kubectl rollout restart deployment/app -n {{NAMESPACE}}
 
 # Ver eventos
-kubectl get events -n meu-app --sort-by='.lastTimestamp'
+kubectl get events -n {{NAMESPACE}} --sort-by='.lastTimestamp'
 ```
 
 ---

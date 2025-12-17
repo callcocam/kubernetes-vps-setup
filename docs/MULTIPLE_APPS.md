@@ -17,20 +17,20 @@ Guia completo para rodar vários apps Laravel na mesma VPS Kubernetes, cada um c
 ### Arquitetura
 
 ```
-VPS (148.230.78.184)
+VPS ({{VPS_IP}})
 │
 ├── 🌐 Ingress Controller Nginx (COMPARTILHADO)
-│   ├── plannerate.cloud → kb-app
+│   ├── {{DOMAIN}} → {{NAMESPACE}}
 │   ├── outrodominio.com → meu-outro-app
 │   └── terceiro.com → terceiro-app
 │
 ├── 🔒 cert-manager (COMPARTILHADO)
-│   ├── SSL para plannerate.cloud
+│   ├── SSL para {{DOMAIN}}
 │   ├── SSL para outrodominio.com
 │   └── SSL para terceiro.com
 │
-├── 📦 Namespace: kb-app
-│   ├── App: 2 réplicas
+├── 📦 Namespace: {{NAMESPACE}}
+│   ├── App: {{REPLICAS}} réplicas
 │   ├── PostgreSQL: 1 instância
 │   └── Redis: 1 instância
 │
@@ -73,21 +73,21 @@ VPS (148.230.78.184)
 
 ### Cenário
 
-**VPS**: 148.230.78.184 (8GB RAM, 4 CPUs)
+**VPS**: {{VPS_IP}} (8GB RAM, 4 CPUs)
 
 **Apps**:
-1. **plannerate.cloud** (já rodando)
+1. **{{DOMAIN}}** (já rodando)
 2. **loja.com** (novo)
 3. **blog.dev** (novo)
 
-### App 1: plannerate.cloud (já existe)
+### App 1: {{DOMAIN}} (já existe)
 
 ```bash
-kubectl get all -n kb-app
+kubectl get all -n {{NAMESPACE}}
 ```
 
 **Recursos alocados**:
-- App: 2 réplicas (256Mi-512Mi cada)
+- App: {{REPLICAS}} réplicas ({{MEM_REQUEST}}-{{MEM_LIMIT}} cada)
 - PostgreSQL: 1Gi
 - Redis: 256Mi
 - **Total: ~2.5GB RAM**

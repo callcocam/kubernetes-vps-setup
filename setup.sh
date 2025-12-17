@@ -538,14 +538,25 @@ echo -e "   ${CYAN}Produção:${NC} ${GREEN}https://${DOMAIN}${NC}"
 # Copiar documentação e scripts úteis
 echo -e "\n${YELLOW}📚 Copiando documentação e scripts úteis...${NC}"
 
-# Criar pasta docs
-mkdir -p "$PROJECT_ROOT/docs"
+# Copiar pasta de documentação completa e processar templates
+if [[ -d "$SCRIPT_DIR/docs" ]]; then
+    mkdir -p "$PROJECT_ROOT/docs"
+    
+    # Copiar e processar cada arquivo .md
+    for doc_file in "$SCRIPT_DIR/docs"/*.md; do
+        if [[ -f "$doc_file" ]]; then
+            output_file="$PROJECT_ROOT/docs/$(basename "$doc_file")"
+            process_template "$doc_file" "$output_file"
+        fi
+    done
+    
+    echo -e "${GREEN}✅ Documentação copiada e personalizada em ${PROJECT_ROOT}/docs/${NC}"
+fi
 
-# Copiar documentação
-cp "$SCRIPT_DIR/QUICK_START.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
-cp "$SCRIPT_DIR/MULTIPLE_APPS.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
-cp "$SCRIPT_DIR/README.md" "$PROJECT_ROOT/docs/SETUP_README.md" 2>/dev/null || true
-cp "$SCRIPT_DIR/EXAMPLES.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
+# Copiar README principal
+if [[ -f "$SCRIPT_DIR/README.md" ]]; then
+    process_template "$SCRIPT_DIR/README.md" "$PROJECT_ROOT/docs/SETUP_README.md"
+fi
 
 # Criar pasta scripts (se houver scripts úteis)
 if ls "$SCRIPT_DIR"/*.sh >/dev/null 2>&1; then
@@ -557,10 +568,8 @@ if ls "$SCRIPT_DIR"/*.sh >/dev/null 2>&1; then
             cp "$script" "$PROJECT_ROOT/scripts/" 2>/dev/null || true
         fi
     done
+    echo -e "${GREEN}✅ Scripts copiados para ${PROJECT_ROOT}/scripts/${NC}"
 fi
-
-echo -e "${GREEN}✅ Documentação copiada para ${PROJECT_ROOT}/docs/${NC}"
-[[ -d "$PROJECT_ROOT/scripts" ]] && echo -e "${GREEN}✅ Scripts copiados para ${PROJECT_ROOT}/scripts/${NC}"
 
 # Perguntar se deseja apagar a pasta kubernetes-vps-setup
 echo -e "\n${YELLOW}🗑️  Deseja apagar a pasta kubernetes-vps-setup?${NC}"
