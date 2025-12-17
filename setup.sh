@@ -533,4 +533,47 @@ echo -e "${YELLOW}🌐 Sua aplicação estará disponível em:${NC}"
 echo -e "   ${CYAN}Local:${NC} ${GREEN}http://localhost:8000${NC}"
 echo -e "   ${CYAN}Produção:${NC} ${GREEN}https://${DOMAIN}${NC}"
 
+# Copiar documentação e scripts úteis
+echo -e "\n${YELLOW}📚 Copiando documentação e scripts úteis...${NC}"
+
+# Criar pasta docs
+mkdir -p "$PROJECT_ROOT/docs"
+
+# Copiar documentação
+cp "$SCRIPT_DIR/QUICK_START.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
+cp "$SCRIPT_DIR/MULTIPLE_APPS.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
+cp "$SCRIPT_DIR/README.md" "$PROJECT_ROOT/docs/SETUP_README.md" 2>/dev/null || true
+cp "$SCRIPT_DIR/EXAMPLES.md" "$PROJECT_ROOT/docs/" 2>/dev/null || true
+
+# Criar pasta scripts (se houver scripts úteis)
+if ls "$SCRIPT_DIR"/*.sh >/dev/null 2>&1; then
+    mkdir -p "$PROJECT_ROOT/scripts"
+    # Copiar apenas scripts úteis (não o setup.sh)
+    for script in "$SCRIPT_DIR"/*.sh; do
+        script_name=$(basename "$script")
+        if [[ "$script_name" != "setup.sh" ]]; then
+            cp "$script" "$PROJECT_ROOT/scripts/" 2>/dev/null || true
+        fi
+    done
+fi
+
+echo -e "${GREEN}✅ Documentação copiada para ${PROJECT_ROOT}/docs/${NC}"
+[[ -d "$PROJECT_ROOT/scripts" ]] && echo -e "${GREEN}✅ Scripts copiados para ${PROJECT_ROOT}/scripts/${NC}"
+
+# Perguntar se deseja apagar a pasta kubernetes-vps-setup
+echo -e "\n${YELLOW}🗑️  Deseja apagar a pasta kubernetes-vps-setup?${NC}"
+echo -e "${CYAN}   A configuração já foi concluída e os arquivos importantes foram copiados.${NC}"
+read -p "$(echo -e ${YELLOW}Apagar kubernetes-vps-setup? [s/N]:${NC} )" -n 1 -r DELETE_SETUP
+echo
+
+if [[ $DELETE_SETUP =~ ^[Ss]$ ]]; then
+    echo -e "${YELLOW}🗑️  Removendo kubernetes-vps-setup...${NC}"
+    cd "$PROJECT_ROOT"
+    rm -rf kubernetes-vps-setup
+    echo -e "${GREEN}✅ Pasta removida com sucesso!${NC}"
+else
+    echo -e "${CYAN}ℹ️  Pasta kubernetes-vps-setup mantida.${NC}"
+    echo -e "${CYAN}   Você pode removê-la manualmente depois: ${YELLOW}rm -rf kubernetes-vps-setup${NC}"
+fi
+
 echo -e "\n${GREEN}✨ Configuração concluída! Boa sorte com seu projeto! 🚀${NC}\n"
