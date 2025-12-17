@@ -23,11 +23,17 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 
 ### 📘 Documentação Completa
 
-4. **[📚 DEPLOY_VPS.md](DEPLOY_VPS.md)** - **Guia Definitivo**
+4. **[📚 DEPLOY_VPS.md](DEPLOY_VPS.md)** - **Guia Completo (Simplificado)**
    - **PARTE 1**: Configuração da VPS (faça uma vez)
    - **PARTE 2**: Deploy de projetos Laravel (para cada projeto)
-   - Troubleshooting completo
-   - Conceitos de Kubernetes explicados
+   - Focado em comandos e uso do `setup.sh`
+   - Conceitos-chave explicados
+
+5. **[🔬 DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md)** - **Referência Técnica**
+   - Todos os YAMLs completos com explicações
+   - Detalhes técnicos de cada configuração
+   - Para quem quer entender a fundo
+   - Troubleshooting detalhado
 
 ## 🎯 Escolha seu Caminho
 
@@ -50,9 +56,10 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 ### 🔧 Quer Entender os Detalhes?
 
 ```
-1. Leia: DEPLOY_VPS.md (completo)
-2. Explore: FILE_STRUCTURE.md
-3. Customize: templates/*.stub
+1. Leia: DEPLOY_VPS.md (simplificado)
+2. Aprofunde: DEPLOY_VPS_ADVANCED.md (YAMLs completos)
+3. Explore: FILE_STRUCTURE.md
+4. Customize: templates/*.stub
 ```
 
 ### 📊 Quer Customizar Templates?

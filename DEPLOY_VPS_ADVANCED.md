@@ -1,6 +1,4 @@
-# 🚀 Guia de Deploy: Laravel com Docker e Kubernetes em VPS
-
-> 📘 **Versão Simplificada** - Para detalhes técnicos completos, veja [DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md)
+# 🚀 Guia Completo: Deploy de Projetos Laravel com Docker e Kubernetes em VPS
 
 Este guia está dividido em **duas partes principais**:
 
@@ -8,8 +6,6 @@ Este guia está dividido em **duas partes principais**:
 - **PARTE 2**: Deploy de Projetos Laravel (use para cada novo projeto)
 
 > 💡 **Para Iniciantes**: Kubernetes (K8s) é uma plataforma que automatiza o deploy, escalonamento e gerenciamento de aplicações em containers. Pense nele como um "maestro" que coordena todos os componentes da sua aplicação.
-> 
-> 🎯 **Quer algo mais rápido?** Veja [QUICK_START.md](QUICK_START.md) - Deploy em 30 minutos!
 
 ---
 
@@ -824,124 +820,474 @@ README.md
 
 ## 8. Configuração de Arquivos Kubernetes
 
-> ✨ **Use o script automatizado para gerar todos os arquivos!**
+> 📝 **Estes arquivos definem como sua aplicação será executada no Kubernetes**.
+> Vamos criar cada um passo a passo.
 
-Em vez de criar manualmente cada arquivo YAML, use o script de configuração interativo:
+### 8.1 Namespace (`kubernetes/namespace.yaml`)
 
-```bash
-# No diretório do projeto (onde está o setup.sh)
-cd kubernetes-vps-setup
-./setup.sh
+> 🏢 **Namespace**: Isola recursos do seu projeto (como uma pasta para organizar).
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: meu-projeto  # ⚠️ Substitua por um nome único para seu projeto
 ```
 
-**O script irá:**
-1. ✅ Solicitar informações do projeto (nome, domínio, email, etc.)
-2. ✅ Gerar automaticamente **15 arquivos** prontos para uso
-3. ✅ Criar senhas seguras para PostgreSQL e Redis
-4. ✅ Configurar volumes persistentes
-5. ✅ Preparar Dockerfile e configurações Nginx/Supervisor
-6. ✅ Criar workflow do GitHub Actions para CI/CD
+### 8.2 Secrets (`kubernetes/secrets.yaml`)
 
-**Arquivos gerados:**
+> 🔐 **Secrets**: Armazena informações sensíveis de forma segura (senhas, chaves API, etc.)
 
-| Categoria | Arquivos |
-|-----------|----------|
-| **Kubernetes** | `namespace.yaml`, `secrets.yaml`, `configmap.yaml`, `postgres.yaml`, `redis.yaml`, `deployment.yaml`, `service.yaml`, `ingress.yaml`, `cert-issuer.yaml`, `migration-job.yaml` |
-| **Docker** | `Dockerfile`, `.dockerignore`, `nginx/default.conf`, `supervisor/supervisord.conf` |
-| **CI/CD** | `.github/workflows/deploy.yml` |
-
-> 📖 **Quer entender cada arquivo em detalhes?** Veja [DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md#8-configuração-dos-arquivos-kubernetes)  
-> 📁 **Estrutura completa de arquivos:** [FILE_STRUCTURE.md](FILE_STRUCTURE.md)
-
-### 8.1 Executar o Script de Configuração
-
-```bash
-./setup.sh
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+type: Opaque
+stringData:
+  # Laravel
+  APP_KEY: "base64:GERAR_COM_php_artisan_key:generate_--show"
+  
+  # Database
+  DB_PASSWORD: "senha_forte_postgresql_aqui"
+  
+  # Redis
+  REDIS_PASSWORD: "senha_forte_redis_aqui"
+  
+  # DigitalOcean Spaces (ou S3) - opcional
+  DO_SPACES_KEY: "sua_access_key"
+  DO_SPACES_SECRET: "sua_secret_key"
+  
+  # Mail (opcional - se usar SMTP)
+  MAIL_PASSWORD: "senha_email"
 ```
 
-**Exemplo de interação:**
+> 🔑 **Como gerar APP_KEY**:
+> ```bash
+> # No seu computador local, dentro do projeto Laravel
+> php artisan key:generate --show
+> # Copie o valor gerado (começa com "base64:...")
+> ```
 
-```
-🚀 Configurador de Deploy Kubernetes para Laravel
+### 8.3 ConfigMap (`kubernetes/configmap.yaml`)
 
-📝 Configuração do Projeto
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+> ⚙️ **ConfigMap**: Armazena configurações não-sensíveis da aplicação.
 
-Nome do projeto (ex: meu-app): minha-api
-Domínio (ex: app.exemplo.com): api.meusite.com
-Seu email (para SSL): contato@meusite.com
-
-📊 Banco de Dados PostgreSQL
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Nome do banco (padrão: minha_api): 
-Usuário (padrão: minha_api_user): 
-Senha (deixe vazio para gerar automaticamente): 
-✅ Senha gerada: kR9#mP2$xL5...
-
-[... continua ...]
-
-✅ Configuração concluída!
-
-📁 Arquivos criados em: /caminho/completo/generated/
-```
-
-### 8.2 Aplicar Configurações no Cluster
-
-Após gerar os arquivos, aplique-os no Kubernetes:
-
-```bash
-# Navegar para o diretório gerado
-cd generated
-
-# 1. Criar namespace
-kubectl apply -f k8s/namespace.yaml
-
-# 2. Aplicar secrets e configmap
-kubectl apply -f k8s/secrets.yaml
-kubectl apply -f k8s/configmap.yaml
-
-# 3. Criar certificado SSL
-kubectl apply -f k8s/cert-issuer.yaml
-
-# 4. Deploy do banco de dados
-kubectl apply -f k8s/postgres.yaml
-
-# 5. Deploy do Redis
-kubectl apply -f k8s/redis.yaml
-
-# 6. Deploy da aplicação (após build da imagem Docker - ver Passo 9)
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/ingress.yaml
-
-# 7. Executar migrations (após tudo estar rodando)
-kubectl apply -f k8s/migration-job.yaml
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+data:
+  # Aplicação
+  APP_NAME: "Meu Projeto Laravel"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://meuapp.seudominio.com"  # ⚠️ Seu domínio
+  
+  # Database
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres-service"  # Nome do service do PostgreSQL
+  DB_PORT: "5432"
+  DB_DATABASE: "laravel"
+  DB_USERNAME: "laravel"
+  
+  # Redis
+  REDIS_HOST: "redis-service"  # Nome do service do Redis
+  REDIS_PORT: "6379"
+  
+  # Cache & Session
+  CACHE_DRIVER: "redis"
+  SESSION_DRIVER: "redis"
+  QUEUE_CONNECTION: "redis"
+  
+  # File Storage (se usar DigitalOcean Spaces ou S3)
+  FILESYSTEM_DISK: "do_spaces"  # ou "s3" ou "local"
+  DO_SPACES_ENDPOINT: "https://sfo3.digitaloceanspaces.com"
+  DO_SPACES_REGION: "sfo3"
+  DO_SPACES_BUCKET: "meu-bucket"
+  
+  # Mail (opcional)
+  MAIL_MAILER: "smtp"
+  MAIL_HOST: "smtp.mailtrap.io"
+  MAIL_PORT: "2525"
+  MAIL_USERNAME: "seu_usuario"
+  MAIL_ENCRYPTION: "tls"
+  MAIL_FROM_ADDRESS: "noreply@seudominio.com"
+  MAIL_FROM_NAME: "${APP_NAME}"
 ```
 
-**Ou aplique tudo de uma vez (após ter a imagem Docker):**
+### 8.4 PostgreSQL (`kubernetes/postgres.yaml`)
 
-```bash
-kubectl apply -f k8s/
+> 🐘 **PostgreSQL**: Banco de dados principal da aplicação.
+
+```yaml
+---
+# PersistentVolume - Armazenamento físico
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/postgresql  # ⚠️ Criar este diretório na VPS!
+  storageClassName: manual
+  
+---
+# PersistentVolumeClaim - "Reserva" do armazenamento
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: manual
+  
+---
+# StatefulSet - Deploy do PostgreSQL
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: "laravel"
+        - name: POSTGRES_USER
+          value: "laravel"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+          
+---
+# Service - Expõe PostgreSQL internamente no cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  clusterIP: None  # Headless service para StatefulSet
 ```
 
-### 8.3 Verificar Status
+> 📁 **Antes de aplicar, criar o diretório na VPS**:
+> ```bash
+> # Na VPS (via SSH)
+> mkdir -p /data/postgresql
+> chmod 700 /data/postgresql
+> ```
 
-```bash
-# Ver todos os recursos no namespace
-kubectl get all -n minha-api
+### 8.5 Redis (`kubernetes/redis.yaml`)
 
-# Verificar pods
-kubectl get pods -n minha-api
+> 🔴 **Redis**: Cache, sessões e filas.
 
-# Ver logs de um pod
-kubectl logs -f -n minha-api <nome-do-pod>
-
-# Ver certificado SSL
-kubectl get certificate -n minha-api
+```yaml
+---
+# PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/redis  # ⚠️ Criar este diretório na VPS!
+  storageClassName: manual
+  
+---
+# PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: manual
+  
+---
+# StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  serviceName: redis-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --appendonly
+        - "yes"
+        ports:
+        - containerPort: 6379
+          name: redis
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: REDIS_PASSWORD
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+          
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  clusterIP: None
 ```
 
-> ✅ **Arquivos Kubernetes configurados!** Próximo: criar a imagem Docker.
+> 📁 **Criar diretório na VPS**:
+> ```bash
+> # Na VPS (via SSH)
+> mkdir -p /data/redis
+> chmod 755 /data/redis
+> ```
+
+### 8.6 Deployment da Aplicação (`kubernetes/deployment.yaml`)
+
+> 🚀 **Deployment**: Define como sua aplicação Laravel será executada.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  replicas: 2  # Número de pods (instâncias) da aplicação
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+    spec:
+      containers:
+      - name: app
+        image: seu-usuario-dockerhub/seu-projeto:latest  # ⚠️ Sua imagem Docker
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+```
+
+### 8.7 Service (`kubernetes/service.yaml`)
+
+> 🔌 **Service**: Expõe sua aplicação internamente no cluster.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  selector:
+    app: laravel-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+```
+
+### 8.8 Issuer de Certificados SSL (`kubernetes/cert-issuer.yaml`)
+
+> 🔐 **ClusterIssuer**: Configura Let's Encrypt para certificados SSL gratuitos.
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: seu-email@exemplo.com  # ⚠️ Seu email real
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+```
+
+### 8.9 Ingress (`kubernetes/ingress.yaml`)
+
+> 🌐 **Ingress**: Roteia tráfego HTTP(S) externo para sua aplicação.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - meuapp.seudominio.com  # ⚠️ Seu domínio
+    secretName: app-tls
+  rules:
+  - host: meuapp.seudominio.com  # ⚠️ Seu domínio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
+```
+
+### 8.10 Job de Migration (`kubernetes/migration-job.yaml`)
+
+> 🔄 **Job**: Executa migrations do Laravel uma vez.
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration
+  namespace: meu-projeto  # ⚠️ Mesmo nome do namespace
+spec:
+  template:
+    spec:
+      containers:
+      - name: migration
+        image: seu-usuario-dockerhub/seu-projeto:latest  # ⚠️ Sua imagem Docker
+        command: ["php", "artisan", "migrate", "--force"]
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+      restartPolicy: OnFailure
+  backoffLimit: 3
+```
+
+> ✅ **Todos os arquivos Kubernetes criados!** Agora vamos ao deploy.
 
 ## 9. Deploy com GitHub Actions
 
