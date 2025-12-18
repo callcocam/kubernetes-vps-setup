@@ -1,28 +1,18 @@
-╔════════════════════════════════════════════════════════════════════════════╗
-║                                                                            ║
-║   🚀 KUBERNETES SETUP PARA LARAVEL - DEPLOY PROFISSIONAL SIMPLIFICADO     ║
-║                                                                            ║
-║   ✅ Setup 100% Automatizado    ✅ SSL Grátis (Let's Encrypt)            ║
-║   ✅ CI/CD Integrado            ✅ Zero-Downtime Deploys                  ║
-║   ✅ PostgreSQL + Redis         ✅ Queue Workers Automáticos              ║
-║   ✅ Documentação Completa      ✅ 10 Exemplos Práticos                   ║
-║                                                                            ║
-╚════════════════════════════════════════════════════════════════════════════╝
+✅ Projeto limpo e organizado!
 
-📚 DOCUMENTAÇÃO DISPONÍVEL:
+📁 Estrutura:
+   setup.sh              → Gera tudo
+   templates/            → Templates dos arquivos
+   docs/                 → Documentação essencial (9 arquivos)
 
-   📖 INDEX.md          - Guia de navegação (COMECE AQUI!)
-   ⚡ QUICK_START.md    - Deploy em 30 minutos
-   📘 README.md         - Visão geral e instruções
-   📚 DEPLOY_VPS.md     - Guia completo detalhado
-   📁 FILE_STRUCTURE.md - Estrutura de arquivos
-   💼 EXAMPLES.md       - 10 casos de uso reais
-   📄 SUMMARY.md        - Resumo visual completo
+🎯 Uso:
+   ./setup.sh            → Responde perguntas, gera arquivos
+   cd projeto/.dev       → Entra no ambiente dev
+   ./init.sh             → Sobe tudo automaticamente
 
-🚀 INÍCIO RÁPIDO:
-
-   1. Leia o guia:  cat INDEX.md
-   2. Execute:      ./setup.sh
-   3. Siga passos do QUICK_START.md
-
-💡 Feito com ❤️  para facilitar a vida de desenvolvedores Laravel!
+📚 Documentação essencial:
+   docs/QUICK_START.md          - 30 minutos para deploy
+   docs/DEPLOY_VPS.md           - Guia completo
+   docs/DEPLOY_LOCAL_K8S.md     - Minikube local
+   docs/TROUBLESHOOTING.md      - Resolver problemas
+   docs/INDEX.md                - Ver tudo

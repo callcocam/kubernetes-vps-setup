@@ -385,6 +385,48 @@ process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DEV_DIR/php.ini"
 # .env.local
 process_template "$SCRIPT_DIR/templates/env.local.stub" "$DEV_DIR/.env.local"
 
+# Script de inicialização automática
+cat > "$DEV_DIR/init.sh" << 'INITSCRIPT'
+#!/bin/bash
+set -e
+
+echo "🚀 Inicializando ambiente de desenvolvimento..."
+echo ""
+
+# 1. Copiar .env
+echo "📝 Copiando .env..."
+cp .env.local ../.env
+
+# 2. Subir containers
+echo "🐳 Subindo containers..."
+docker compose up -d
+
+# 3. Aguardar containers ficarem prontos
+echo "⏳ Aguardando containers ficarem prontos..."
+sleep 8
+
+# 4. Ajustar permissões
+echo "🔐 Ajustando permissões..."
+docker compose exec -T app chmod -R 775 storage bootstrap/cache
+docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
+
+# 5. Instalar dependências
+echo "📦 Instalando dependências..."
+docker compose exec -T app composer install --no-interaction
+
+# 6. Migrations
+echo "🗄️  Executando migrations..."
+docker compose exec -T app php artisan migrate --force
+
+echo ""
+echo "✅ Ambiente pronto!"
+echo ""
+echo "🌐 Acesse: http://localhost:8000"
+echo "📧 Mailhog: http://localhost:8025"
+INITSCRIPT
+
+chmod +x "$DEV_DIR/init.sh"
+
 # README para desenvolvimento
 cat > "$DEV_DIR/README.md" << 'DEVREADME'
 # 🛠️ Ambiente de Desenvolvimento Local
@@ -393,7 +435,14 @@ Esta pasta contém os arquivos para rodar o projeto localmente com Docker Compos
 
 > ⚠️ **Esta pasta não sobe para o git** - configurações locais apenas
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Automático)
+
+```bash
+cd .dev
+./init.sh
+```
+
+## 📋 Ou Passo a Passo (Manual)
 
 ```bash
 # Entrar na pasta .dev
@@ -543,6 +592,11 @@ echo -e "${PURPLE}════════════════════�
 
 echo -e "${CYAN}🛠️  Para Desenvolvimento Local:${NC}"
 echo -e ""
+echo -e "${YELLOW}Opção 1 - Automático (Recomendado):${NC}"
+echo -e "   ${GREEN}cd .dev && ./init.sh${NC}"
+echo -e ""
+echo -e "${YELLOW}Opção 2 - Manual:${NC}"
+echo -e ""
 echo -e "${YELLOW}1.${NC} ${CYAN}Entrar na pasta .dev:${NC}"
 echo -e "   ${GREEN}cd .dev${NC}"
 echo -e ""
@@ -550,15 +604,12 @@ echo -e "${YELLOW}2.${NC} ${CYAN}Copiar .env:${NC}"
 echo -e "   ${GREEN}cp .env.local ../.env${NC}"
 echo -e ""
 echo -e "${YELLOW}3.${NC} ${CYAN}Inicializar ambiente:${NC}"
-echo -e "   ${GREEN}cd .dev && bash -c '\\${NC}"
-echo -e "   ${GREEN}  cp .env.local ../.env && \\${NC}"
-echo -e "   ${GREEN}  docker compose up -d && \\${NC}"
-echo -e "   ${GREEN}  sleep 5 && \\${NC}"
+echo -e "   ${GREEN}docker compose up -d && \\${NC}"
+echo -e "   ${GREEN}  sleep 8 && \\${NC}"
 echo -e "   ${GREEN}  docker compose exec -T app chmod -R 775 storage bootstrap/cache && \\${NC}"
 echo -e "   ${GREEN}  docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache && \\${NC}"
 echo -e "   ${GREEN}  docker compose exec -T app composer install && \\${NC}"
 echo -e "   ${GREEN}  docker compose exec -T app php artisan migrate --force${NC}"
-echo -e "   ${GREEN}'${NC}"
 echo -e ""
 echo -e "${YELLOW}4.${NC} ${CYAN}Acessar aplicação:${NC}"
 echo -e "   🌐 App: ${GREEN}http://localhost:8000${NC}"
