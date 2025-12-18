@@ -4,6 +4,9 @@ metadata:
   name: app
   namespace: {{NAMESPACE}}
 spec:
+  # Número de réplicas do app
+  # Produção: 2 (alta disponibilidade)
+  # Dev/Test: 1 (economia de recursos)
   replicas: {{REPLICAS}}
   selector:
     matchLabels:
@@ -23,12 +26,13 @@ spec:
             name: app-config
         - secretRef:
             name: app-secrets
-        resources:
-          requests:
-            memory: "{{MEM_REQUEST}}"
-            cpu: "{{CPU_REQUEST}}"
-          limits:
-            memory: "{{MEM_LIMIT}}"
+        # Recursos configurados para VPS com 4 vCPUs e 16GB RAM
+        # Request: quantidade GARANTIDA de recursos
+        # Limit: quantidade MÁXIMA que o pod pode usar
+        # 
+        # Valores recomendados:
+        # Produção: requests 512Mi/500m, limits 1Gi/1000m
+        # Dev/Test: requests 256Mi/250m, limits 512Mi/500m
             cpu: "{{CPU_LIMIT}}"
         livenessProbe:
           httpGet:

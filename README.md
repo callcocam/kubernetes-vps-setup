@@ -33,9 +33,13 @@ O script vai perguntar:
 - 📦 Nome do projeto
 - 🌐 Domínio
 - 🖥️ IP da VPS
-- � Usuário/Organização GitHub
+- 🐙 Usuário/Organização GitHub
 - 🔑 Senhas (ou gera automaticamente)
-- ⚙️ Recursos (CPU/Memória)
+- ⚙️ **Recursos (CPU/Memória)** - **NOVO! Escolha entre 4 perfis:**
+  - **1)** 🚀 Produção (2 réplicas, alta disponibilidade)
+  - **2)** 🛠️ Desenvolvimento (1 réplica, recursos moderados)
+  - **3)** 🧪 Test (1 réplica, testes e QA)
+  - **4)** ⚙️ Manual (você define os valores)
 
 ### Passo 2: Verificar arquivos gerados
 

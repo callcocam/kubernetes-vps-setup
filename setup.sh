@@ -186,11 +186,64 @@ echo -e "\n${GREEN}════════════════════�
 echo -e "${GREEN}  RECURSOS (CPU/MEMÓRIA)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-read_input "💾 Memória mínima (ex: 256Mi, 512Mi):" "256Mi" MEM_REQUEST
-read_input "💾 Memória máxima (ex: 512Mi, 1Gi):" "512Mi" MEM_LIMIT
-read_input "⚡ CPU mínima (ex: 250m, 500m):" "250m" CPU_REQUEST
-read_input "⚡ CPU máxima (ex: 500m, 1000m):" "500m" CPU_LIMIT
-read_input "📊 Número de réplicas:" "2" REPLICAS
+echo -e "${YELLOW}💡 Escolha um perfil de recursos ou configure manualmente:${NC}\n"
+
+echo -e "${CYAN}1)${NC} 🚀 ${GREEN}Produção${NC} - Alta disponibilidade"
+echo -e "   └─ 2 réplicas | RAM: 512Mi-1Gi | CPU: 500m-1000m"
+echo -e "   └─ Recomendado para apps em produção com tráfego real\n"
+
+echo -e "${CYAN}2)${NC} 🛠️  ${YELLOW}Desenvolvimento${NC} - Recursos moderados"
+echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
+echo -e "   └─ Para ambiente de desenvolvimento\n"
+
+echo -e "${CYAN}3)${NC} 🧪 ${BLUE}Test${NC} - Recursos moderados"
+echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
+echo -e "   └─ Para testes automatizados e homologação\n"
+
+echo -e "${CYAN}4)${NC} ⚙️  ${PURPLE}Manual${NC} - Configuração customizada"
+echo -e "   └─ Você define todos os valores\n"
+
+read -p "$(echo -e ${BLUE}Escolha uma opção [1-4]:${NC} )" RESOURCE_PROFILE
+
+case $RESOURCE_PROFILE in
+    1)
+        echo -e "\n${GREEN}✅ Perfil PRODUÇÃO selecionado${NC}\n"
+        MEM_REQUEST="512Mi"
+        MEM_LIMIT="1Gi"
+        CPU_REQUEST="500m"
+        CPU_LIMIT="1000m"
+        REPLICAS="2"
+        ;;
+    2)
+        echo -e "\n${YELLOW}✅ Perfil DESENVOLVIMENTO selecionado${NC}\n"
+        MEM_REQUEST="256Mi"
+        MEM_LIMIT="512Mi"
+        CPU_REQUEST="250m"
+        CPU_LIMIT="500m"
+        REPLICAS="1"
+        ;;
+    3)
+        echo -e "\n${BLUE}✅ Perfil TEST selecionado${NC}\n"
+        MEM_REQUEST="256Mi"
+        MEM_LIMIT="512Mi"
+        CPU_REQUEST="250m"
+        CPU_LIMIT="500m"
+        REPLICAS="1"
+        ;;
+    4|*)
+        echo -e "\n${PURPLE}⚙️  Configuração MANUAL${NC}\n"
+        read_input "💾 Memória mínima (ex: 256Mi, 512Mi):" "512Mi" MEM_REQUEST
+        read_input "💾 Memória máxima (ex: 512Mi, 1Gi):" "1Gi" MEM_LIMIT
+        read_input "⚡ CPU mínima (ex: 250m, 500m):" "500m" CPU_REQUEST
+        read_input "⚡ CPU máxima (ex: 500m, 1000m):" "1000m" CPU_LIMIT
+        read_input "📊 Número de réplicas:" "2" REPLICAS
+        ;;
+esac
+
+echo -e "${CYAN}Recursos configurados:${NC}"
+echo -e "  RAM: ${GREEN}${MEM_REQUEST} → ${MEM_LIMIT}${NC}"
+echo -e "  CPU: ${GREEN}${CPU_REQUEST} → ${CPU_LIMIT}${NC}"
+echo -e "  Réplicas: ${GREEN}${REPLICAS}${NC}\n"
 
 # Resumo
 echo -e "\n${PURPLE}═══════════════════════════════════════════════════════════════${NC}"

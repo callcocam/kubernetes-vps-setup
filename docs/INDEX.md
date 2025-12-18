@@ -41,22 +41,40 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
    - Para quem quer entender a fundo
    - Troubleshooting detalhado
 
-7. **[� TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - **Problemas Comuns**
+7. **[🎯 RESOURCE_ALLOCATION.md](RESOURCE_ALLOCATION.md)** - **Alocação de Recursos**
+   - Configuração específica para VPS 4 vCPUs / 16GB RAM
+   - Distribuição para Produção, Dev e Test
+   - Monitoramento e otimização
+   - Troubleshooting de recursos
+
+8. **[🔧 TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - **Problemas Comuns**
    - Bugs conhecidos e soluções
    - Mixed Content, ImagePullBackOff, SSL, etc.
    - Comandos de debug e emergência
    - Checklist de validação
 
-8. **[🔒 LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - **Configurar HTTPS**
+9. **[🔒 LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - **Configurar HTTPS**
    - TrustProxies para Kubernetes
    - Forçar HTTPS em produção
    - Resolver Mixed Content
    - Configuração pós-deploy
 
-9. **[�💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
+10. **[💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
    - Cenários reais de uso
    - Configurações específicas
    - Casos de uso avançados
+
+11. **[🎯 EXEMPLO_SELECAO_PERFIS.md](EXEMPLO_SELECAO_PERFIS.md)** - **NOVO! Menu Interativo**
+   - Exemplos práticos do novo menu de perfis
+   - Fluxo completo de configuração
+   - Casos de uso para modo Manual
+   - FAQ sobre seleção de recursos
+
+12. **[📊 COMPARACAO_PERFIS.md](COMPARACAO_PERFIS.md)** - **NOVO! Comparação Visual**
+   - Comparação lado a lado dos 4 perfis
+   - Gráficos de uso de recursos
+   - Guia de decisão (qual perfil escolher)
+   - Request vs Limit explicado visualmente
 
 ## 🎯 Escolha seu Caminho
 
@@ -109,6 +127,7 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 |---------|-----------|-------------|
 | `setup.sh` | 🚀 Configurador automático | Gerar arquivos para novo projeto |
 | `QUICK_START.md` | ⚡ Guia rápido | Primeiro deploy (30 min) |
+| `RESOURCE_ALLOCATION.md` | 🎯 Alocação de recursos | Otimizar uso da VPS |
 | `MULTIPLE_APPS.md` | 🔄 Múltiplos apps | Rodar vários apps na mesma VPS |
 | `README.md` | 📖 Visão geral | Entender o projeto |
 | `DEPLOY_VPS.md` | 📚 Guia simplificado | Comandos e fluxo principal |

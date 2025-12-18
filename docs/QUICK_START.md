@@ -32,15 +32,24 @@ cd kubernetes-vps-setup
 🏢 Namespace: {{NAMESPACE}}
 🌐 Domínio: {{DOMAIN}}
 🖥️  IP da VPS: {{VPS_IP}}
- APP_KEY: [ENTER para gerar]
+🔑 APP_KEY: [ENTER para gerar]
 📧 Email: {{APP_EMAIL}}
 🗄️  Banco: {{DB_NAME}}
 👤 Usuário DB: {{DB_USER}}
 🔐 Senha PostgreSQL: [ENTER para gerar]
 🔐 Senha Redis: [ENTER para gerar]
 ☁️  DigitalOcean Spaces: n
-💾 Recursos: [ENTER para padrões]
+
+⭐ NOVO! Perfil de Recursos:
+  1) 🚀 Produção (2 réplicas, alta disponibilidade)
+  2) 🛠️  Dev (1 réplica, recursos moderados)
+  3) 🧪 Test (1 réplica, testes)
+  4) ⚙️  Manual (customizado)
+  
+Escolha [1-4]: 1    ← Escolha o perfil adequado!
 ```
+
+💡 **Dica:** Use opção **1** para produção, **2** para dev, **3** para test
 
 ✅ **Arquivos criados em**: `kubernetes/`, `docker/`, `.github/workflows/`
 
