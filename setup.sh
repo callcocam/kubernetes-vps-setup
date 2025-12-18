@@ -541,21 +541,34 @@ echo -e "   ${CYAN}Local:${NC} ${GREEN}http://localhost:8000${NC}"
 echo -e "   ${CYAN}Produção:${NC} ${GREEN}https://${DOMAIN}${NC}"
 
 # Copiar documentação e scripts úteis
-echo -e "\n${YELLOW}📚 Copiando documentação e scripts úteis...${NC}"
+echo -e "\n${YELLOW}📚 Copiando documentação essencial...${NC}"
 
-# Copiar pasta de documentação completa e processar templates
+# Copiar apenas documentos mais relevantes (processando templates)
 if [[ -d "$SCRIPT_DIR/docs" ]]; then
     mkdir -p "$PROJECT_ROOT/docs"
     
-    # Copiar e processar cada arquivo .md
-    for doc_file in "$SCRIPT_DIR/docs"/*.md; do
+    # Lista de documentos essenciais
+    ESSENTIAL_DOCS=(
+        "QUICK_START.md"              # Guia rápido de 30 minutos
+        "DEPLOY_VPS.md"               # Deploy simplificado
+        "DEV_LOCAL.md"                # Desenvolvimento local
+        "MULTIPLE_APPS.md"            # Múltiplas apps no mesmo VPS
+        "TROUBLESHOOTING.md"          # Solução de problemas
+        "FILE_STRUCTURE.md"           # Estrutura de arquivos
+        "GITHUB_REGISTRY_SECRETS.md"  # Configuração de secrets
+    )
+    
+    # Copiar e processar cada documento essencial
+    for doc_name in "${ESSENTIAL_DOCS[@]}"; do
+        doc_file="$SCRIPT_DIR/docs/$doc_name"
         if [[ -f "$doc_file" ]]; then
-            output_file="$PROJECT_ROOT/docs/$(basename "$doc_file")"
+            output_file="$PROJECT_ROOT/docs/$doc_name"
             process_template "$doc_file" "$output_file"
+            echo -e "  ${GREEN}✓${NC} $doc_name"
         fi
     done
     
-    echo -e "${GREEN}✅ Documentação copiada e personalizada em ${PROJECT_ROOT}/docs/${NC}"
+    echo -e "${GREEN}✅ Documentação essencial copiada e personalizada${NC}"
 fi
 
 # Copiar README principal
