@@ -27,9 +27,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         opcache
 
 # Instalar Redis extension
-RUN apk add --no-cache $PHPIZE_DEPS \
+RUN apk update \
+    && apk add --no-cache $PHPIZE_DEPS \
     && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

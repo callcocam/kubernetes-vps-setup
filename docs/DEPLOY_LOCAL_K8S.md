@@ -337,8 +337,36 @@ Após o setup, você tem **duas opções** de desenvolvimento local:
 cd .dev
 docker-compose up -d
 
+# Verificar se containers estão rodando
+docker-compose ps
+
+# Ver logs (caso haja erro)
+docker-compose logs -f
+
 # Acessar aplicação
 # http://localhost:8000
+```
+
+**Troubleshooting Docker Compose:**
+
+```bash
+# Se der erro ERR_CONNECTION_RESET:
+# 1. Verificar containers
+docker ps
+
+# 2. Ver logs completos
+docker-compose logs
+
+# 3. Verificar porta 8000
+sudo lsof -i :8000
+# ou
+sudo netstat -tulpn | grep 8000
+
+# 4. Parar e reiniciar
+docker-compose down
+docker-compose up -d
+
+# 5. Se não funcionar, use a Opção B (Minikube) - são independentes!
 ```
 
 ### Opção B: Kubernetes Local (Simula Produção)

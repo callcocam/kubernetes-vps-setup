@@ -634,6 +634,7 @@ if [[ -d "$SCRIPT_DIR/docs" ]]; then
     ESSENTIAL_DOCS=(
         "QUICK_START.md"              # Guia rápido de 30 minutos
         "DEPLOY_VPS.md"               # Deploy simplificado
+        "DEPLOY_LOCAL_K8S.md"         # Deploy Kubernetes local (Minikube)
         "DEV_LOCAL.md"                # Desenvolvimento local
         "MULTIPLE_APPS.md"            # Múltiplas apps no mesmo VPS
         "TROUBLESHOOTING.md"          # Solução de problemas
