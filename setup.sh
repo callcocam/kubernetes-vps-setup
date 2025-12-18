@@ -44,7 +44,7 @@ echo -e "${CYAN}Este script irá gerar:${NC}"
 echo -e "  ${YELLOW}✓${NC} 🛠️  Arquivos de ${CYAN}Desenvolvimento Local${NC} → pasta ${GREEN}.dev/${NC} (não sobe pro git)"
 echo -e "  ${YELLOW}✓${NC} 🚀 Arquivos de ${CYAN}Produção Kubernetes${NC} → ${GREEN}kubernetes/${NC} + GitHub Actions"
 echo ""
-echo -e "${YELLOW}💡 Desenvolvimento local é executado manualmente com docker-compose${NC}"
+echo -e "${YELLOW}💡 Desenvolvimento local é executado manualmente com docker compose${NC}"
 echo -e "${YELLOW}💡 Produção é feita via GitHub Actions (só commit/push)${NC}\n"
 
 SETUP_LOCAL=true
@@ -314,9 +314,7 @@ GITHUB_DIR="$PROJECT_ROOT/.github/workflows"
 echo -e "\n${YELLOW}⏳ Criando estrutura de diretórios...${NC}"
 
 # Desenvolvimento local
-mkdir -p "$DEV_DIR/docker/nginx"
-mkdir -p "$DEV_DIR/docker/supervisor"
-mkdir -p "$DEV_DIR/docker/php"
+mkdir -p "$DEV_DIR"
 
 # Produção
 mkdir -p "$OUTPUT_DIR"
@@ -376,13 +374,13 @@ process_template "$SCRIPT_DIR/templates/docker-compose.yml.stub" "$DEV_DIR/docke
 process_template "$SCRIPT_DIR/templates/Dockerfile.dev.stub" "$DEV_DIR/Dockerfile.dev"
 
 # Nginx dev
-process_template "$SCRIPT_DIR/templates/nginx-dev.conf.stub" "$DEV_DIR/docker/nginx/dev.conf"
+process_template "$SCRIPT_DIR/templates/nginx-dev.conf.stub" "$DEV_DIR/nginx.conf"
 
 # Supervisor dev
-process_template "$SCRIPT_DIR/templates/supervisord-dev.conf.stub" "$DEV_DIR/docker/supervisor/supervisord-dev.conf"
+process_template "$SCRIPT_DIR/templates/supervisord-dev.conf.stub" "$DEV_DIR/supervisord.conf"
 
 # PHP config
-process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DEV_DIR/docker/php/local.ini"
+process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DEV_DIR/php.ini"
 
 # .env.local
 process_template "$SCRIPT_DIR/templates/env.local.stub" "$DEV_DIR/.env.local"
@@ -405,14 +403,18 @@ cd .dev
 cp .env.local ../.env
 
 # 2. Subir containers
-docker-compose up -d
+docker compose up -d
 
-# 3. Instalar dependências
-docker-compose exec app composer install
-docker-compose exec app npm install
+# 3. Ajustar permissões
+sleep 5
+docker compose exec -T app chmod -R 775 storage bootstrap/cache
+docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
 
-# 4. Migrations
-docker-compose exec app php artisan migrate
+# 4. Instalar dependências
+docker compose exec -T app composer install
+
+# 5. Migrations
+docker compose exec -T app php artisan migrate --force
 ```
 
 ## 🌐 Acessar
@@ -547,17 +549,18 @@ echo -e ""
 echo -e "${YELLOW}2.${NC} ${CYAN}Copiar .env:${NC}"
 echo -e "   ${GREEN}cp .env.local ../.env${NC}"
 echo -e ""
-echo -e "${YELLOW}3.${NC} ${CYAN}Subir containers:${NC}"
-echo -e "   ${GREEN}docker-compose up -d${NC}"
+echo -e "${YELLOW}3.${NC} ${CYAN}Inicializar ambiente:${NC}"
+echo -e "   ${GREEN}cd .dev && bash -c '\\${NC}"
+echo -e "   ${GREEN}  cp .env.local ../.env && \\${NC}"
+echo -e "   ${GREEN}  docker compose up -d && \\${NC}"
+echo -e "   ${GREEN}  sleep 5 && \\${NC}"
+echo -e "   ${GREEN}  docker compose exec -T app chmod -R 775 storage bootstrap/cache && \\${NC}"
+echo -e "   ${GREEN}  docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache && \\${NC}"
+echo -e "   ${GREEN}  docker compose exec -T app composer install && \\${NC}"
+echo -e "   ${GREEN}  docker compose exec -T app php artisan migrate --force${NC}"
+echo -e "   ${GREEN}'${NC}"
 echo -e ""
-echo -e "${YELLOW}4.${NC} ${CYAN}Instalar dependências:${NC}"
-echo -e "   ${GREEN}docker-compose exec app composer install${NC}"
-echo -e "   ${GREEN}docker-compose exec app npm install${NC}"
-echo -e ""
-echo -e "${YELLOW}5.${NC} ${CYAN}Executar migrations:${NC}"
-echo -e "   ${GREEN}docker-compose exec app php artisan migrate${NC}"
-echo -e ""
-echo -e "${YELLOW}6.${NC} ${CYAN}Acessar aplicação:${NC}"
+echo -e "${YELLOW}4.${NC} ${CYAN}Acessar aplicação:${NC}"
 echo -e "   🌐 App: ${GREEN}http://localhost:8000${NC}"
 echo -e "   📧 Mailhog: ${GREEN}http://localhost:8025${NC}"
 echo -e ""

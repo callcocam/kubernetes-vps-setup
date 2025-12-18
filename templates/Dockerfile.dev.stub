@@ -51,6 +51,13 @@ COPY docker/supervisor/supervisord-dev.conf /etc/supervisor/conf.d/supervisord.c
 # Criar diretórios necessários
 RUN mkdir -p /var/log/supervisor /run/nginx
 
+# Ajustar permissões para Laravel (storage e cache)
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
 # Expor portas
 EXPOSE 80 9000
 
