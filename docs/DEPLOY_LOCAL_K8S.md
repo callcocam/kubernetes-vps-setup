@@ -786,29 +786,123 @@ kubectl describe pod -n {{NAMESPACE}} -l app=laravel-app
 
 ## 🧹 Limpeza e Reset
 
-### Deletar Aplicação
+### Deletar Uma Aplicação Específica
 
 ```bash
-# Deletar todos os recursos do namespace
+# Deletar namespace completo (remove TUDO: pods, volumes, secrets, etc)
 kubectl delete namespace {{NAMESPACE}}
 
-# Ou deletar aplicando os arquivos com --delete
-kubectl delete -f kubernetes/
+# Verificar que foi removido
+kubectl get namespaces
+kubectl get pods -n {{NAMESPACE}}  # Deve retornar: No resources found
 ```
 
-### Resetar Kubernetes Local
+### Deletar Múltiplas Aplicações
 
 ```bash
-# Parar Minikube
-minikube stop
+# Se você tem várias apps rodando (ex: siscom-v1, ideal, siga)
+kubectl delete namespace siscom-v1 ideal siga
 
-# Deletar cluster
+# Ou deletar uma por vez
+kubectl delete namespace siscom-v1
+kubectl delete namespace ideal
+kubectl delete namespace siga
+
+# Ver o que sobrou
+kubectl get namespaces
+```
+
+### Resetar Kubernetes Local Completamente
+
+```bash
+# Opção 1: Parar e deletar cluster (LIMPA TUDO)
+minikube stop
 minikube delete
 
-# Reiniciar do zero
+# Opção 2: Reiniciar do zero
 minikube start --driver=docker
 minikube addons enable ingress
+
+# Verificar que está limpo
+kubectl get namespaces  # Só deve ter: default, kube-system, kube-public, etc
+kubectl get pods -A     # Só pods do sistema
 ```
+
+### Limpar Imagens Antigas do Minikube
+
+```bash
+# Ver imagens no Minikube
+minikube image ls
+
+# Limpar imagens não utilizadas
+minikube image rm <nome-da-imagem>
+
+# Exemplo:
+minikube image rm ghcr.io/callcocam/ideal:latest
+minikube image rm callcocam/siga:latest
+```
+
+### Limpar Imagens e Containers Docker (Host)
+
+```bash
+# Ver todas as imagens Docker no seu host
+docker images | grep -E "(siscom|ideal|siga)"
+
+# Ver containers parados
+docker ps -a --filter "status=exited"
+
+# Remover containers parados específicos
+docker rm $(docker ps -a --filter "name=ideal" -q) 2>/dev/null || true
+docker rm $(docker ps -a --filter "name=siscom" -q) 2>/dev/null || true
+
+# Remover imagens específicas
+docker rmi callcocam/ideal:latest
+docker rmi callcocam/siga:latest
+docker rmi ghcr.io/callcocam/ideal:latest
+
+# Limpeza geral Docker (remove TUDO que não está em uso)
+docker system prune -a --volumes
+
+# Ou limpeza mais agressiva
+docker system prune -a --volumes --force
+```
+
+> 💡 **Dica**: `docker system prune -a --volumes` remove:
+> - Containers parados
+> - Imagens não utilizadas
+> - Volumes não utilizados  
+> - Redes não utilizadas
+> - Cache de build
+
+### Script de Limpeza Completa
+
+```bash
+# Deletar todas as suas aplicações do Kubernetes
+kubectl delete namespace siscom-v1 ideal siga --ignore-not-found=true
+
+# Aguardar finalizar
+sleep 10
+
+# Limpar imagens antigas do Minikube
+for img in $(minikube image ls | grep -E "(siscom|ideal|siga)" | awk '{print $1}'); do
+    minikube image rm "$img" 2>/dev/null || true
+done
+
+# Parar containers Docker Compose (se existirem)
+cd /home/call/projects/ideal && docker compose down -v 2>/dev/null || true
+cd /home/call/projects/siscom-v1 && docker compose down -v 2>/dev/null || true
+cd /home/call/projects/siga && docker compose down -v 2>/dev/null || true
+
+# Remover imagens Docker do host
+docker rmi $(docker images | grep -E "(siscom|ideal|siga)" | awk '{print $3}') 2>/dev/null || true
+
+# Limpeza geral Docker
+docker system prune -a --volumes --force
+
+echo "✅ Ambiente completamente limpo!"
+```
+
+> ⚠️ **Atenção**: Deletar um namespace **remove TODOS os dados** (incluindo banco de dados). Use com cuidado!
 
 ---
 
