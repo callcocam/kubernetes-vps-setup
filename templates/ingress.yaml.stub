@@ -6,6 +6,9 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Suporte a WebSocket para Reverb
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: nginx
   tls:
@@ -16,6 +19,15 @@ spec:
   - host: {{DOMAIN}}
     http:
       paths:
+      # Rota do Reverb (WebSocket) - deve vir ANTES da rota /
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 8080
+      # Rota principal da aplicação
       - path: /
         pathType: Prefix
         backend:

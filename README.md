@@ -35,6 +35,7 @@ O script vai perguntar:
 - 🖥️ IP da VPS
 - 🐙 Usuário/Organização GitHub
 - 🔑 Senhas (ou gera automaticamente)
+- 🔴 **Credenciais do Reverb** (geração automática de APP_ID, APP_KEY, APP_SECRET)
 - ⚙️ **Recursos (CPU/Memória)** - **NOVO! Escolha entre 4 perfis:**
   - **1)** 🚀 Produção (2 réplicas, alta disponibilidade)
   - **2)** 🛠️ Desenvolvimento (1 réplica, recursos moderados)

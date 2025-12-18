@@ -76,6 +76,12 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
    - Guia de decisão (qual perfil escolher)
    - Request vs Limit explicado visualmente
 
+13. **[🔴 REVERB_SETUP.md](REVERB_SETUP.md)** - **NOVO! Laravel Reverb (WebSockets)**
+   - Configuração automática em todos os ambientes
+   - Broadcasting em tempo real (chat, notificações)
+   - Exemplos práticos de uso
+   - Troubleshooting de WebSocket
+
 ## 🎯 Escolha seu Caminho
 
 ### 🆕 Primeira Vez com Kubernetes?

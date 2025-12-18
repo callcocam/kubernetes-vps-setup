@@ -183,6 +183,33 @@ if [[ "$USE_SPACES" == "s" || "$USE_SPACES" == "S" ]]; then
 fi
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}  LARAVEL REVERB (WEBSOCKETS)${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+
+echo -e "${CYAN}Laravel Reverb é o servidor WebSocket oficial do Laravel${NC}"
+echo -e "${CYAN}para broadcasting em tempo real (notificações, chat, etc)${NC}\n"
+
+echo -e "${YELLOW}💡 Deixe vazio para gerar credenciais automáticas${NC}"
+
+read_input "🔑 Reverb APP_ID (deixe vazio para gerar):" "" REVERB_APP_ID
+if [[ -z "$REVERB_APP_ID" ]]; then
+    REVERB_APP_ID=$(openssl rand -hex 16)
+    echo -e "${GREEN}✅ APP_ID gerado: ${REVERB_APP_ID}${NC}"
+fi
+
+read_password "🔐 Reverb APP_KEY (deixe vazio para gerar):" REVERB_APP_KEY
+if [[ -z "$REVERB_APP_KEY" ]]; then
+    REVERB_APP_KEY=$(generate_password)
+    echo -e "${GREEN}✅ APP_KEY gerado: ${REVERB_APP_KEY}${NC}"
+fi
+
+read_password "🔐 Reverb APP_SECRET (deixe vazio para gerar):" REVERB_APP_SECRET
+if [[ -z "$REVERB_APP_SECRET" ]]; then
+    REVERB_APP_SECRET=$(generate_password)
+    echo -e "${GREEN}✅ APP_SECRET gerado: ${REVERB_APP_SECRET}${NC}"
+fi
+
+echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}  RECURSOS (CPU/MEMÓRIA)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
@@ -317,6 +344,9 @@ process_template() {
     sed -i "s|{{DB_USER}}|${DB_USER}|g" "$output_file"
     sed -i "s|{{DB_PASSWORD}}|${DB_PASSWORD}|g" "$output_file"
     sed -i "s|{{REDIS_PASSWORD}}|${REDIS_PASSWORD}|g" "$output_file"
+    sed -i "s|{{REVERB_APP_ID}}|${REVERB_APP_ID}|g" "$output_file"
+    sed -i "s|{{REVERB_APP_KEY}}|${REVERB_APP_KEY}|g" "$output_file"
+    sed -i "s|{{REVERB_APP_SECRET}}|${REVERB_APP_SECRET}|g" "$output_file"
     sed -i "s|{{DO_SPACES_KEY}}|${DO_SPACES_KEY}|g" "$output_file"
     sed -i "s|{{DO_SPACES_SECRET}}|${DO_SPACES_SECRET}|g" "$output_file"
     sed -i "s|{{DO_SPACES_REGION}}|${DO_SPACES_REGION}|g" "$output_file"

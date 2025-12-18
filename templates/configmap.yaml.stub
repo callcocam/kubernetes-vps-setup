@@ -26,6 +26,15 @@ data:
   SESSION_DRIVER: "redis"
   QUEUE_CONNECTION: "redis"
   
+  # Broadcasting (Reverb)
+  BROADCAST_DRIVER: "reverb"
+  REVERB_HOST: "localhost"
+  REVERB_PORT: "8080"
+  REVERB_SCHEME: "http"
+  VITE_REVERB_HOST: "{{DOMAIN}}"
+  VITE_REVERB_PORT: "443"
+  VITE_REVERB_SCHEME: "https"
+  
   # File Storage
   FILESYSTEM_DISK: "do_spaces"
   DO_SPACES_ENDPOINT: "{{DO_SPACES_ENDPOINT}}"

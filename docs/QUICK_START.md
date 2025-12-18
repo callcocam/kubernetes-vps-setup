@@ -40,6 +40,11 @@ cd kubernetes-vps-setup
 🔐 Senha Redis: [ENTER para gerar]
 ☁️  DigitalOcean Spaces: n
 
+🔴 Reverb WebSocket:
+  APP_ID: [ENTER para gerar]
+  APP_KEY: [ENTER para gerar]
+  APP_SECRET: [ENTER para gerar]
+
 ⭐ NOVO! Perfil de Recursos:
   1) 🚀 Produção (2 réplicas, alta disponibilidade)
   2) 🛠️  Dev (1 réplica, recursos moderados)
@@ -49,7 +54,7 @@ cd kubernetes-vps-setup
 Escolha [1-4]: 1    ← Escolha o perfil adequado!
 ```
 
-💡 **Dica:** Use opção **1** para produção, **2** para dev, **3** para test
+💡 **Dica:** Pressione ENTER em todas as senhas/credenciais para gerar automaticamente
 
 ✅ **Arquivos criados em**: `kubernetes/`, `docker/`, `.github/workflows/`
 

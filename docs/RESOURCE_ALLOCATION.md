@@ -83,9 +83,10 @@ Quando rodar `./setup.sh` para o app de **produção**, use:
 | Componente | Réplicas | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |------------|----------|-------------|-----------|----------------|--------------|
 | **Laravel App** | 2 | 500m × 2 = 1 vCPU | 1000m × 2 = 2 vCPU | 512Mi × 2 = 1GB | 1Gi × 2 = 2GB |
+| **Reverb (WebSocket)** | 2 | 100m × 2 = 0.2 vCPU | 250m × 2 = 0.5 vCPU | 128Mi × 2 = 256MB | 256Mi × 2 = 512MB |
 | **PostgreSQL** | 1 | 250m | 500m | 512Mi | 1Gi |
 | **Redis** | 1 | 100m | 200m | 128Mi | 256Mi |
-| **Total Produção** | - | **~1.35 vCPU** | **~2.7 vCPU** | **~1.6 GB** | **~3.2 GB** |
+| **Total Produção** | - | **~1.55 vCPU** | **~3.2 vCPU** | **~1.9 GB** | **~3.7 GB** |
 
 ### Namespace
 
@@ -119,9 +120,10 @@ Quando rodar `./setup.sh` para o app de **dev**, use:
 | Componente | Réplicas | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |------------|----------|-------------|-----------|----------------|--------------|
 | **Laravel App** | 1 | 250m | 500m | 256Mi | 512Mi |
+| **Reverb (WebSocket)** | 1 | 100m | 250m | 128Mi | 256Mi |
 | **PostgreSQL** | 1 | 100m | 250m | 256Mi | 512Mi |
 | **Redis** | 1 | 50m | 100m | 64Mi | 128Mi |
-| **Total Dev** | - | **~0.4 vCPU** | **~0.85 vCPU** | **~576 MB** | **~1.1 GB** |
+| **Total Dev** | - | **~0.5 vCPU** | **~1.1 vCPU** | **~704 MB** | **~1.4 GB** |
 
 ### Namespace
 
@@ -155,9 +157,10 @@ Quando rodar `./setup.sh` para o app de **test**, use:
 | Componente | Réplicas | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |------------|----------|-------------|-----------|----------------|--------------|
 | **Laravel App** | 1 | 250m | 500m | 256Mi | 512Mi |
+| **Reverb (WebSocket)** | 1 | 100m | 250m | 128Mi | 256Mi |
 | **PostgreSQL** | 1 | 100m | 250m | 256Mi | 512Mi |
 | **Redis** | 1 | 50m | 100m | 64Mi | 128Mi |
-| **Total Test** | - | **~0.4 vCPU** | **~0.85 vCPU** | **~576 MB** | **~1.1 GB** |
+| **Total Test** | - | **~0.5 vCPU** | **~1.1 vCPU** | **~704 MB** | **~1.4 GB** |
 
 ### Namespace
 
@@ -173,28 +176,28 @@ Namespace: meu-app-test
 
 | Ambiente | CPU Request | Memory Request |
 |----------|-------------|----------------|
-| **Produção** | 1.35 vCPU | 1.6 GB |
-| **Dev** | 0.4 vCPU | 576 MB |
-| **Test** | 0.4 vCPU | 576 MB |
+| **Produção** | 1.55 vCPU | 1.9 GB |
+| **Dev** | 0.5 vCPU | 704 MB |
+| **Test** | 0.5 vCPU | 704 MB |
 | **Infraestrutura** | 0.15 vCPU | 300 MB |
 | **Sistema/Overhead** | 0.5 vCPU | 3 GB |
-| **TOTAL** | **~2.8 vCPU** | **~6 GB** |
+| **TOTAL** | **~3.2 vCPU** | **~6.6 GB** |
 
 ### Uso Total (Limits)
 
 | Ambiente | CPU Limit | Memory Limit |
 |----------|-----------|--------------|
-| **Produção** | 2.7 vCPU | 3.2 GB |
-| **Dev** | 0.85 vCPU | 1.1 GB |
-| **Test** | 0.85 vCPU | 1.1 GB |
+| **Produção** | 3.2 vCPU | 3.7 GB |
+| **Dev** | 1.1 vCPU | 1.4 GB |
+| **Test** | 1.1 vCPU | 1.4 GB |
 | **Infraestrutura** | 0.35 vCPU | 500 MB |
 | **Sistema/Overhead** | 0.5 vCPU | 3 GB |
-| **TOTAL** | **~5.2 vCPU** | **~9 GB** |
+| **TOTAL** | **~6.2 vCPU** | **~10 GB** |
 
 ### 💡 Análise
 
-✅ **CPU:** Requests em ~70% (2.8/4), Limits em ~130% (5.2/4)  
-✅ **Memória:** Requests em ~37% (6/16), Limits em ~56% (9/16)  
+✅ **CPU:** Requests em ~80% (3.2/4), Limits em ~155% (6.2/4)  
+✅ **Memória:** Requests em ~41% (6.6/16), Limits em ~62% (10/16)  
 
 **Status:** ✅ **Configuração saudável!**
 
@@ -202,6 +205,7 @@ Namespace: meu-app-test
 - CPU limits podem ultrapassar 100% (é normal em Kubernetes)
 - Requests garantem recursos mínimos sem contenção
 - Sistema pode escalar bursts de CPU quando necessário
+- Reverb adiciona ~0.2 vCPU por ambiente (leve)
 
 ---
 
