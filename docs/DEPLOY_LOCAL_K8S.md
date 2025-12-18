@@ -29,6 +29,24 @@ Este guia mostra como configurar um cluster Kubernetes **localmente** para desen
 
 ---
 
+## 🚀 Atalho: Já tenho Docker/Kubernetes instalado!
+
+> ✅ **Seu ambiente já está pronto?** Pule direto para configurar seu projeto Laravel!
+
+**Se você JÁ TEM instalado:**
+- ✅ Docker Engine (`docker --version`)
+- ✅ kubectl (`kubectl version --client`)
+- ✅ Minikube ou Kubernetes local (`kubectl get nodes`)
+- ✅ Nginx Ingress Controller (`kubectl get pods -n ingress-nginx`)
+
+**👉 Vá direto para: [PARTE 2: Preparação do Projeto Laravel](#5-preparação-do-projeto-laravel)**
+
+---
+
+**Precisa instalar o ambiente?** Continue abaixo! 👇
+
+---
+
 # 📦 PARTE 1: Preparação do Ambiente Local
 
 ## 1. Instalação do Docker e Minikube (Linux)
