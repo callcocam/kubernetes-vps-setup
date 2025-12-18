@@ -233,6 +233,8 @@ cd plannerate
 ```bash
 # Clonar o repositório kubernetes-vps-setup DENTRO do projeto
 git clone https://github.com/SEU_USUARIO/kubernetes-vps-setup.git
+# ou
+git clone git@github.com:SEU_USUARIO/kubernetes-vps-setup.git
 
 # Ou se você já tem o repositório localmente:
 cp -r /caminho/para/kubernetes-vps-setup ./
