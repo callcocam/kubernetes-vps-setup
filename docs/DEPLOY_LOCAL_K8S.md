@@ -456,9 +456,9 @@ minikube image ls | grep {{GITHUB_REPO}}
 kubectl apply -f kubernetes/namespace.yaml
 kubectl apply -f kubernetes/secrets.yaml
 kubectl apply -f kubernetes/configmap.yaml
+kubectl apply -f kubernetes/deployment.yaml
 kubectl apply -f kubernetes/postgres.yaml
 kubectl apply -f kubernetes/redis.yaml
-kubectl apply -f kubernetes/deployment.yaml
 kubectl apply -f kubernetes/service.yaml
 kubectl apply -f kubernetes/ingress.yaml
 
