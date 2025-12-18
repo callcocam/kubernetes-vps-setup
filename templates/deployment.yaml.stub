@@ -20,6 +20,7 @@ spec:
       # Container principal do Laravel
       - name: app
         image: ghcr.io/{{GITHUB_REPO}}:latest
+        imagePullPolicy: IfNotPresent  # Usa imagem local se existir (dev) ou pull (prod)
         ports:
         - containerPort: 80
         envFrom:
@@ -55,29 +56,31 @@ spec:
           periodSeconds: 5
       
       # Container do Laravel Reverb (WebSocket)
-      - name: reverb
-        image: ghcr.io/{{GITHUB_REPO}}:latest
-        command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
-        ports:
-        - containerPort: 8080
-          name: reverb
-        envFrom:
-        - configMapRef:
-            name: app-config
-        - secretRef:
-            name: app-secrets
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "250m"
-        livenessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 15
-          periodSeconds: 10
+      # IMPORTANTE: Descomente apenas se usar Laravel Reverb (composer require laravel/reverb)
+      # - name: reverb
+      #   image: ghcr.io/{{GITHUB_REPO}}:latest
+      #   imagePullPolicy: IfNotPresent
+      # #   command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+      #   ports:
+      #   - containerPort: 8080
+      #     name: reverb
+      #   envFrom:
+      #   - configMapRef:
+      #       name: app-config
+      #   - secretRef:
+      #       name: app-secrets
+      #   resources:
+      #     requests:
+      #       memory: "128Mi"
+      #       cpu: "100m"
+      #     limits:
+      #       memory: "256Mi"
+      #       cpu: "250m"
+      #   livenessProbe:
+      #     tcpSocket:
+      #       port: 8080
+      #     initialDelaySeconds: 15
+      #     periodSeconds: 10
         readinessProbe:
           tcpSocket:
             port: 8080

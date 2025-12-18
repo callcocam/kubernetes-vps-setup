@@ -298,7 +298,7 @@ seu-projeto-laravel/
 │   ├── configmap.yaml
 │   ├── postgres.yaml
 │   ├── redis.yaml
-│   ├── deployment.yaml
+│   ├── deployment.yaml   (Laravel Reverb já incluído! 🚀)
 │   ├── service.yaml
 │   ├── ingress.yaml
 │   ├── cert-issuer.yaml
@@ -309,7 +309,8 @@ seu-projeto-laravel/
 │   ├── nginx.conf
 │   ├── supervisord.conf
 │   ├── php.ini
-│   └── .env.local
+│   ├── .env.local
+│   └── init.sh           (instala Reverb automaticamente! 📡)
 ├── docker/               ← 📁 Configs Docker para produção
 │   ├── nginx/
 │   │   └── default.conf
@@ -318,11 +319,19 @@ seu-projeto-laravel/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml    ← 📁 CI/CD (GitHub Actions)
-├── Dockerfile            ← 🐳 Dockerfile de produção
+├── Dockerfile            ← 🐳 Dockerfile de produção (Reverb incluído!)
 └── docs/                 ← 📚 Documentação completa
 ```
 
 > ✅ **Importante**: Após executar `setup.sh`, o diretório `kubernetes-vps-setup/` será **automaticamente apagado**!
+
+> 🎯 **Laravel Reverb**: O setup já configura tudo automaticamente!
+> - Dockerfile instala `laravel/reverb` durante build
+> - Container WebSocket habilitado no deployment
+> - Rota `/app` configurada no Ingress
+> - Init.sh instala Reverb em desenvolvimento local
+> 
+> **Você não precisa fazer nada!** 🚀
 
 ---
 
@@ -335,6 +344,11 @@ Após o setup, você tem **duas opções** de desenvolvimento local:
 ```bash
 # Usar configuração gerada em .dev/
 cd .dev
+
+# Rodar script de inicialização automática (RECOMENDADO)
+./init.sh
+
+# OU manualmente:
 docker-compose up -d
 
 # Verificar se containers estão rodando
@@ -346,6 +360,16 @@ docker-compose logs -f
 # Acessar aplicação
 # http://localhost:8000
 ```
+
+> 🚀 **init.sh faz tudo automaticamente**:
+> - Copia `.env`
+> - Sobe containers
+> - Ajusta permissões
+> - Instala dependências (Composer)
+> - **Instala Laravel Reverb automaticamente!** 📡
+> - Roda migrations
+> 
+> **Um comando e está pronto!**
 
 **Troubleshooting Docker Compose:**
 
@@ -389,6 +413,11 @@ docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
 # Verificar imagem
 docker images | grep {{GITHUB_REPO}}
 ```
+
+> 💡 **O build já instala Laravel Reverb automaticamente!**
+> - Dependências instaladas via Composer
+> - Container WebSocket configurado
+> - Pronto para produção ou desenvolvimento local
 
 ### 7.2 Carregar Imagem no Minikube
 

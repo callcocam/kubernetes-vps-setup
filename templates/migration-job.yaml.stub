@@ -9,6 +9,7 @@ spec:
       containers:
       - name: migration
         image: ghcr.io/{{GITHUB_REPO}}:latest
+        imagePullPolicy: IfNotPresent
         command: ["php", "artisan", "migrate", "--force"]
         envFrom:
         - configMapRef:

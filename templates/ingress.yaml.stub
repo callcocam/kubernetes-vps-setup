@@ -4,17 +4,19 @@ metadata:
   name: app-ingress
   namespace: {{NAMESPACE}}
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # PRODUÇÃO: Descomente as 2 linhas abaixo após instalar cert-manager
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Mudar para "true" em produção com SSL
     # Suporte a WebSocket para Reverb
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - {{DOMAIN}}
-    secretName: app-tls
+  # PRODUÇÃO: Descomente a seção TLS abaixo após configurar cert-manager
+  # tls:
+  # - hosts:
+  #   - {{DOMAIN}}
+  #   secretName: app-tls
   rules:
   - host: {{DOMAIN}}
     http:

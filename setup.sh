@@ -414,7 +414,11 @@ docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
 echo "📦 Instalando dependências..."
 docker compose exec -T app composer install --no-interaction
 
-# 6. Migrations
+# 6. Instalar Laravel Reverb
+echo "📡 Instalando Laravel Reverb (WebSocket)..."
+docker compose exec -T app composer require laravel/reverb --no-interaction || echo "⚠️  Reverb já instalado ou erro na instalação"
+
+# 7. Migrations
 echo "🗄️  Executando migrations..."
 docker compose exec -T app php artisan migrate --force
 

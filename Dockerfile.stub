@@ -43,6 +43,9 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
+# Instalar Laravel Reverb (WebSocket)
+RUN composer require laravel/reverb --no-interaction --no-scripts
+
 # Copiar package.json para instalar dependências Node
 COPY package*.json ./
 RUN npm ci
