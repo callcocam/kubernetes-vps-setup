@@ -402,13 +402,27 @@ minikube image ls | grep {{GITHUB_REPO}}
 
 ### 7.3 Aplicar Configurações no Kubernetes
 
+> ⚠️ **Importante**: Para ambiente **local**, NÃO aplique `cert-issuer.yaml` (é apenas para produção com Let's Encrypt)
+
 ```bash
-# Aplicar todos os arquivos de uma vez
-kubectl apply -f kubernetes/
+# Aplicar arquivos EXCETO cert-issuer.yaml (não precisa de SSL local)
+kubectl apply -f kubernetes/namespace.yaml
+kubectl apply -f kubernetes/secrets.yaml
+kubectl apply -f kubernetes/configmap.yaml
+kubectl apply -f kubernetes/postgres.yaml
+kubectl apply -f kubernetes/redis.yaml
+kubectl apply -f kubernetes/deployment.yaml
+kubectl apply -f kubernetes/service.yaml
+kubectl apply -f kubernetes/ingress.yaml
 
 # Aguardar recursos serem criados
 sleep 5
 ```
+
+**Por que pular cert-issuer.yaml?**
+- Cert-manager não está instalado no Minikube (nem é necessário)
+- SSL/Let's Encrypt é apenas para produção (VPS com domínio real)
+- Localmente usamos HTTP (ou mkcert para HTTPS - veja seção 3 de Próximos Passos)
 
 ### 7.4 Verificar e Aguardar Pods Ficarem Prontos
 
