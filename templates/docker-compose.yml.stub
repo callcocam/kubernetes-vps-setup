@@ -14,6 +14,7 @@ services:
       - ../:/var/www/html
       - ./nginx.conf:/etc/nginx/http.d/default.conf
       - ./php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
     ports:
       - "${APP_PORT:-8000}:80"
     environment:
