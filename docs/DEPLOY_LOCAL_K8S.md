@@ -198,13 +198,34 @@ kubectl version
 
 ### 5.1 Clonar Projeto Existente ou Criar Novo
 
-```bash
-# Opção 1: Criar novo projeto Laravel
-composer create-project laravel/laravel meu-projeto-local
-cd meu-projeto-local
+**🎯 OPÇÃO 1: Usar Docker para criar projeto (RECOMENDADO - não precisa instalar PHP/Composer)**
 
-# Opção 2: Usar projeto existente
+```bash
+# Criar projeto Laravel usando Docker (sem instalar PHP no host)
+docker run --rm -v $(pwd):/app composer create-project laravel/laravel plannerate
+
+# Entrar no projeto
+cd plannerate
+```
+
+> ✅ **Vantagem**: Não polui seu sistema com PHP/Composer, tudo roda em container!
+
+**OPÇÃO 2: Usar projeto Laravel existente**
+
+```bash
+# Se já tem um projeto Laravel
 cd /caminho/para/seu-projeto-laravel
+```
+
+**OPÇÃO 3: Instalar Composer no host (não recomendado, mas funciona)**
+
+```bash
+# Instalar PHP e Composer
+sudo apt install composer php-cli php-xml php-mbstring php-zip
+
+# Criar projeto
+composer create-project laravel/laravel plannerate
+cd plannerate
 ```
 
 ### 5.2 Clonar Repositório de Setup
@@ -214,7 +235,7 @@ cd /caminho/para/seu-projeto-laravel
 git clone https://github.com/SEU_USUARIO/kubernetes-vps-setup.git
 
 # Ou se você já tem o repositório localmente:
-# cp -r /caminho/para/kubernetes-vps-setup ./
+cp -r /caminho/para/kubernetes-vps-setup ./
 ```
 
 ---
