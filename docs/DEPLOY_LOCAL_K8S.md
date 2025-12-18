@@ -202,10 +202,10 @@ kubectl version
 
 ```bash
 # Criar projeto Laravel usando Docker (sem instalar PHP no host)
-docker run --rm -v $(pwd):/app composer create-project laravel/laravel plannerate
+docker run --rm -v $(pwd):/app composer create-project laravel/laravel {{NAMESPACE}}
 
 # Entrar no projeto
-cd plannerate
+cd {{NAMESPACE}}
 ```
 
 > ✅ **Vantagem**: Não polui seu sistema com PHP/Composer, tudo roda em container!
@@ -224,8 +224,8 @@ cd /caminho/para/seu-projeto-laravel
 sudo apt install composer php-cli php-xml php-mbstring php-zip
 
 # Criar projeto
-composer create-project laravel/laravel plannerate
-cd plannerate
+composer create-project laravel/laravel {{NAMESPACE}}
+cd {{NAMESPACE}}
 ```
 
 ### 5.2 Clonar Repositório de Setup
@@ -261,17 +261,17 @@ cd kubernetes-vps-setup
 O script fará perguntas interativas. Para ambiente **local**, use estas configurações:
 
 ```bash
-📦 Nome do projeto: plannerate
-🏢 Namespace Kubernetes: plannerate
-🌐 Domínio principal: plannerate.test  # Use .test para desenvolvimento local
+📦 Nome do projeto: {{NAMESPACE}}
+🏢 Namespace Kubernetes: {{NAMESPACE}}
+🌐 Domínio principal: {{DOMAIN}}  # Use .test para desenvolvimento local
 
 🖥️  IP da VPS: 127.0.0.1  # Usar localhost para ambiente local
 
-🐙 Usuário GitHub: seu-usuario  # Apenas para build local, não precisa ser real
-📦 Nome do repositório: meu-app-local
+🐙 Usuário GitHub: {{GITHUB_USER}}
+📦 Nome do repositório: {{GITHUB_REPO}}
 
 🔑 APP_KEY: [deixe vazio - será gerado automaticamente]
-📧 Email do APP: admin@plannerate.test
+📧 Email do APP: admin@{{DOMAIN}}
 
 🗄️  Nome do banco: laravel
 👤 Usuário do banco: laravel
@@ -384,20 +384,20 @@ Continue com os passos abaixo para usar Minikube.
 cd ..  # (sair de kubernetes-vps-setup ou .dev)
 
 # Build usando Dockerfile gerado
-docker build -t seu-usuario/meu-app-local:latest .
+docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
 
 # Verificar imagem
-docker images | grep meu-app-local
+docker images | grep {{GITHUB_REPO}}
 ```
 
 ### 7.2 Carregar Imagem no Minikube
 
 ```bash
 # Carregar imagem no cluster Minikube
-minikube image load seu-usuario/meu-app-local:latest
+minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
 
 # Verificar
-minikube image ls | grep meu-app-local
+minikube image ls | grep {{GITHUB_REPO}}
 ```
 
 ### 7.3 Aplicar Configurações no Kubernetes
@@ -413,8 +413,8 @@ sleep 5
 ### 7.4 Verificar e Aguardar Pods Ficarem Prontos
 
 ```bash
-# Ver status dos pods (substitua pelo seu namespace)
-kubectl get pods -n meu-app-local -w
+# Ver status dos pods
+kubectl get pods -n {{NAMESPACE}} -w
 
 # Aguardar até todos ficarem "Running"
 # Pressione Ctrl+C quando todos estiverem prontos
@@ -427,11 +427,11 @@ kubectl get pods -n meu-app-local -w
 kubectl apply -f kubernetes/migration-job.yaml
 
 # Ou executar dentro do pod da aplicação
-kubectl exec -it -n meu-app-local deployment/app -- \
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- \
     php artisan migrate --force
 
 # Seed (opcional)
-kubectl exec -it -n meu-app-local deployment/app -- \
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- \
     php artisan db:seed --force
 ```
 
@@ -444,11 +444,11 @@ kubectl exec -it -n meu-app-local deployment/app -- \
 **No Linux:**
 
 ```bash
-# Editar /etc/hosts (use o domínio que você configurou no setup.sh)
+# Editar /etc/hosts
 sudo nano /etc/hosts
 
 # Adicionar linha (ao final do arquivo):
-127.0.0.1 plannerate.test
+127.0.0.1 {{DOMAIN}}
 
 # Salvar: Ctrl+O, Enter, Ctrl+X
 ```
@@ -464,10 +464,10 @@ sudo nano /etc/hosts
 sudo nano /etc/hosts
 
 # Adicionar múltiplos domínios:
-127.0.0.1 plannerate.test
-127.0.0.1 admin.plannerate.test
-127.0.0.1 api.plannerate.test
-127.0.0.1 app.plannerate.test
+127.0.0.1 {{DOMAIN}}
+127.0.0.1 admin.{{DOMAIN}}
+127.0.0.1 api.{{DOMAIN}}
+127.0.0.1 app.{{DOMAIN}}
 ```
 
 **Depois, configure o Ingress para responder a cada domínio:**
@@ -479,14 +479,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: plannerate
+  namespace: {{NAMESPACE}}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
   # Domínio principal
-  - host: plannerate.test
+  - host: {{DOMAIN}}
     http:
       paths:
       - path: /
@@ -498,7 +498,7 @@ spec:
               number: 80
   
   # Subdomínio admin (pode apontar para mesmo serviço ou outro)
-  - host: admin.plannerate.test
+  - host: admin.{{DOMAIN}}
     http:
       paths:
       - path: /
@@ -510,7 +510,7 @@ spec:
               number: 80
   
   # Subdomínio API (exemplo com serviço diferente)
-  - host: api.plannerate.test
+  - host: api.{{DOMAIN}}
     http:
       paths:
       - path: /
@@ -528,27 +528,27 @@ spec:
 kubectl apply -f kubernetes/ingress.yaml
 
 # Verificar
-kubectl get ingress -n plannerate
+kubectl get ingress -n {{NAMESPACE}}
 ```
 
 **Agora você pode acessar:**
-- http://plannerate.test
-- http://admin.plannerate.test
-- http://api.plannerate.test
+- http://{{DOMAIN}}
+- http://admin.{{DOMAIN}}
+- http://api.{{DOMAIN}}
 
 > 💡 **No Laravel**: Use rotas com `domain()` para diferenciar subdomínios:
 
 ```php
 // routes/web.php
-Route::domain('plannerate.test')->group(function () {
+Route::domain('{{DOMAIN}}')->group(function () {
     Route::get('/', [HomeController::class, 'index']);
 });
 
-Route::domain('admin.plannerate.test')->group(function () {
+Route::domain('admin.{{DOMAIN}}')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard']);
 });
 
-Route::domain('api.plannerate.test')->group(function () {
+Route::domain('api.{{DOMAIN}}')->group(function () {
     Route::get('/status', [ApiController::class, 'status']);
 });
 ```
@@ -559,8 +559,8 @@ Route::domain('api.plannerate.test')->group(function () {
 # Iniciar tunnel do Minikube (deixar rodando em terminal separado)
 minikube tunnel
 
-# Em outro terminal, verificar IP do Ingress (usar seu namespace)
-kubectl get ingress -n meu-app-local
+# Em outro terminal, verificar IP do Ingress
+kubectl get ingress -n {{NAMESPACE}}
 
 # Se tunnel estiver ativo, acessar normalmente
 ```
@@ -568,15 +568,15 @@ kubectl get ingress -n meu-app-local
 ### 8.3 Acessar no Navegador
 
 ```bash
-# Abrir navegador em (use o domínio configurado):
-http://plannerate.test
+# Abrir navegador em:
+http://{{DOMAIN}}
 
 # Testar subdomínios:
-http://admin.plannerate.test
+http://admin.{{DOMAIN}}
 
 # Ou testar via curl:
-curl -I http://plannerate.test
-curl -I http://admin.plannerate.test
+curl -I http://{{DOMAIN}}
+curl -I http://admin.{{DOMAIN}}
 ```
 
 ---
@@ -586,21 +586,21 @@ curl -I http://admin.plannerate.test
 ### 9.1 Ver Logs em Tempo Real
 
 ```bash
-# Logs da aplicação (usar seu namespace)
-kubectl logs -f -n meu-app-local deployment/app
+# Logs da aplicação
+kubectl logs -f -n {{NAMESPACE}} deployment/app
 
 # Logs do PostgreSQL
-kubectl logs -f -n meu-app-local statefulset/postgres
+kubectl logs -f -n {{NAMESPACE}} statefulset/postgres
 
 # Logs do Redis
-kubectl logs -f -n meu-app-local statefulset/redis
+kubectl logs -f -n {{NAMESPACE}} statefulset/redis
 ```
 
 ### 9.2 Executar Comandos Artisan
 
 ```bash
-# Entrar no pod (usar seu namespace)
-kubectl exec -it -n meu-app-local deployment/app -- bash
+# Entrar no pod
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- bash
 
 # Dentro do pod:
 php artisan migrate
@@ -613,9 +613,9 @@ exit
 ### 9.3 Acessar Banco de Dados
 
 ```bash
-# Conectar ao PostgreSQL (usar seu namespace)
-kubectl exec -it -n meu-app-local statefulset/postgres -- \
-    psql -U laravel -d laravel
+# Conectar ao PostgreSQL
+kubectl exec -it -n {{NAMESPACE}} statefulset/postgres -- \
+    psql -U {{DB_USER}} -d {{DB_NAME}}
 
 # Dentro do psql:
 # \dt              - Listar tabelas
@@ -629,43 +629,43 @@ kubectl exec -it -n meu-app-local statefulset/postgres -- \
 ```bash
 # 1. Fazer mudanças no código
 
-# 2. Rebuild da imagem (usar seu nome de usuário e app)
-docker build -t seu-usuario/meu-app-local:latest .
+# 2. Rebuild da imagem
+docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
 
 # 3. Para Minikube, recarregar imagem
-minikube image load seu-usuario/meu-app-local:latest
+minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
 
 # 4. Deletar pod atual (Kubernetes recriará com nova imagem)
-kubectl delete pod -n meu-app-local -l app=laravel-app
+kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
 
 # 5. Aguardar novo pod ficar pronto
-kubectl get pods -n meu-app-local -w
+kubectl get pods -n {{NAMESPACE}} -w
 ```
 
 ### 9.5 Ver Recursos
 
 ```bash
-# Ver uso de CPU/memória (usar seu namespace)
-kubectl top pods -n meu-app-local
+# Ver uso de CPU/memória
+kubectl top pods -n {{NAMESPACE}}
 kubectl top nodes
 
 # Ver todos os recursos
-kubectl get all -n meu-app-local
+kubectl get all -n {{NAMESPACE}}
 
 # Ver eventos
-kubectl get events -n meu-app-local --sort-by='.lastTimestamp'
+kubectl get events -n {{NAMESPACE}} --sort-by='.lastTimestamp'
 ```
 
 ### 9.6 Port Forward (acesso direto sem Ingress)
 
 ```bash
-# Acessar aplicação diretamente na porta 8080 local (usar seu namespace)
-kubectl port-forward -n meu-app-local deployment/app 8080:80
+# Acessar aplicação diretamente na porta 8080 local
+kubectl port-forward -n {{NAMESPACE}} deployment/app 8080:80
 
 # Abrir: http://localhost:8080
 
 # Acessar PostgreSQL diretamente
-kubectl port-forward -n meu-app-local statefulset/postgres 5432:5432
+kubectl port-forward -n {{NAMESPACE}} statefulset/postgres 5432:5432
 
 # Conectar com cliente SQL local: localhost:5432
 ```
@@ -677,17 +677,17 @@ kubectl port-forward -n meu-app-local statefulset/postgres 5432:5432
 ### Problema: Imagem não encontrada (ImagePullBackOff)
 
 ```bash
-# Verificar se a imagem existe localmente (usar seu nome de app)
-docker images | grep meu-app-local
+# Verificar se a imagem existe localmente
+docker images | grep {{GITHUB_REPO}}
 
 # Rebuild da imagem
-docker build -t seu-usuario/meu-app-local:latest .
+docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
 
 # Carregar imagem no Minikube
-minikube image load seu-usuario/meu-app-local:latest
+minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
 
-# Deletar pod para forçar recriação (usar seu namespace)
-kubectl delete pod -n meu-app-local -l app=laravel-app
+# Deletar pod para forçar recriação
+kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
 ```
 
 ### Problema: Ingress não responde
@@ -699,21 +699,21 @@ kubectl get pods -n ingress-nginx
 # Para Minikube, verificar se tunnel está ativo
 minikube tunnel
 
-# Verificar /etc/hosts (usar seu domínio)
-cat /etc/hosts | grep plannerate.test
+# Verificar /etc/hosts
+cat /etc/hosts | grep {{DOMAIN}}
 
-# Ver detalhes do Ingress (usar seu namespace)
-kubectl describe ingress -n meu-app-local app-ingress
+# Ver detalhes do Ingress
+kubectl describe ingress -n {{NAMESPACE}} app-ingress
 ```
 
 ### Problema: Pods em CrashLoopBackOff
 
 ```bash
-# Ver logs do pod (usar seu namespace)
-kubectl logs -n meu-app-local -l app=laravel-app --previous
+# Ver logs do pod
+kubectl logs -n {{NAMESPACE}} -l app=laravel-app --previous
 
 # Ver eventos
-kubectl describe pod -n meu-app-local -l app=laravel-app
+kubectl describe pod -n {{NAMESPACE}} -l app=laravel-app
 
 # Causas comuns:
 # - APP_KEY não configurada (verifique kubernetes/secrets.yaml)
@@ -728,8 +728,8 @@ kubectl describe pod -n meu-app-local -l app=laravel-app
 ### Deletar Aplicação
 
 ```bash
-# Deletar todos os recursos do namespace (usar seu namespace)
-kubectl delete namespace meu-app-local
+# Deletar todos os recursos do namespace
+kubectl delete namespace {{NAMESPACE}}
 
 # Ou deletar aplicando os arquivos com --delete
 kubectl delete -f kubernetes/
@@ -810,28 +810,28 @@ sudo chmod +x /usr/local/bin/mkcert
 mkcert -install
 
 # 3. Gerar certificados para seus domínios
-mkcert plannerate.test "*.plannerate.test"
+mkcert {{DOMAIN}} "*.{{DOMAIN}}"
 
 # 4. Criar Secret com certificado
-kubectl create secret tls plannerate-tls \
-  --cert=plannerate.test+1.pem \
-  --key=plannerate.test+1-key.pem \
-  -n plannerate
+kubectl create secret tls {{NAMESPACE}}-tls \
+  --cert={{DOMAIN}}+1.pem \
+  --key={{DOMAIN}}+1-key.pem \
+  -n {{NAMESPACE}}
 
 # 5. Atualizar Ingress para usar TLS
-kubectl edit ingress app-ingress -n plannerate
+kubectl edit ingress app-ingress -n {{NAMESPACE}}
 # Adicionar:
 # spec:
 #   tls:
 #   - hosts:
-#     - plannerate.test
-#     - admin.plannerate.test
-#     secretName: plannerate-tls
+#     - {{DOMAIN}}
+#     - admin.{{DOMAIN}}
+#     secretName: {{NAMESPACE}}-tls
 ```
 
 Agora acesse com HTTPS:
-- https://plannerate.test ✅
-- https://admin.plannerate.test ✅
+- https://{{DOMAIN}} ✅
+- https://admin.{{DOMAIN}} ✅
 
 ---
 
@@ -856,8 +856,8 @@ Agora acesse com HTTPS:
 - [ ] Imagem Docker construída (`docker build`)
 - [ ] Imagem carregada no Minikube (`minikube image load`)
 - [ ] Recursos aplicados no cluster (`kubectl apply -f kubernetes/`)
-- [ ] Pods rodando (`kubectl get pods -n SEU-NAMESPACE`)
-- [ ] /etc/hosts configurado com seu domínio
+- [ ] Pods rodando (`kubectl get pods -n {{NAMESPACE}}`)
+- [ ] /etc/hosts configurado (`127.0.0.1 {{DOMAIN}}`)
 - [ ] Minikube tunnel ativo (`minikube tunnel`)
 - [ ] Aplicação acessível no navegador
 - [ ] Migrations executadas
