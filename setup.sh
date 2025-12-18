@@ -110,7 +110,7 @@ echo -e "${GREEN}═════════════════════
 read_input "🐙 Usuário/Organização do GitHub:" "" GITHUB_USER
 echo -e "${YELLOW}💡 Nome do repositório: apenas o nome, SEM usuário/org!${NC}"
 echo -e "${YELLOW}   ✅ Correto: meu-app${NC}"
-echo -e "${YELLOW}   ❌ Errado: ${GITHUB_USER}/meu-app${NC}"
+echo -e "${YELLOW}   ❌ Errado: seu-usuario/meu-app${NC}"
 read_input "📦 Nome do repositório GitHub:" "$PROJECT_NAME" GITHUB_REPO_NAME
 
 # Remover qualquer prefixo de usuário caso o usuário tenha digitado errado

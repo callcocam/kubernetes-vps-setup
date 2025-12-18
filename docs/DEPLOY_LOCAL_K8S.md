@@ -285,8 +285,11 @@ O script fará perguntas interativas. Para ambiente **local**, use estas configu
 
 🖥️  IP da VPS: 127.0.0.1  # Usar localhost para ambiente local
 
-🐙 Usuário GitHub: {{GITHUB_USER}}
-📦 Nome do repositório: {{GITHUB_REPO}}
+🐙 Usuário/Organização do GitHub: {{GITHUB_USER}}
+💡 Nome do repositório: apenas o nome, SEM usuário/org!
+   ✅ Correto: meu-app
+   ❌ Errado: seu-usuario/meu-app
+📦 Nome do repositório GitHub: {{GITHUB_REPO_NAME}}  # Exemplo: ideal, siga, siscom-v1
 
 🔑 APP_KEY: [deixe vazio - será gerado automaticamente]
 📧 Email do APP: admin@{{DOMAIN}}
