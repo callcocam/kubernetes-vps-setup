@@ -108,7 +108,13 @@ echo -e "${GREEN}═════════════════════
 
 # GitHub Container Registry
 read_input "🐙 Usuário/Organização do GitHub:" "" GITHUB_USER
+echo -e "${YELLOW}💡 Nome do repositório: apenas o nome, SEM usuário/org!${NC}"
+echo -e "${YELLOW}   ✅ Correto: meu-app${NC}"
+echo -e "${YELLOW}   ❌ Errado: ${GITHUB_USER}/meu-app${NC}"
 read_input "📦 Nome do repositório GitHub:" "$PROJECT_NAME" GITHUB_REPO_NAME
+
+# Remover qualquer prefixo de usuário caso o usuário tenha digitado errado
+GITHUB_REPO_NAME="${GITHUB_REPO_NAME##*/}"
 GITHUB_REPO="${GITHUB_USER}/${GITHUB_REPO_NAME}"
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
