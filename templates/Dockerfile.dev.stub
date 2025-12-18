@@ -50,15 +50,28 @@ WORKDIR /var/www/html
 # Criar diretórios necessários
 RUN mkdir -p /var/log/supervisor /run/nginx
 
-# Ajustar permissões para Laravel (storage e cache)
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    && mkdir -p storage/logs \
-    && mkdir -p bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+# Script de inicialização para ajustar permissões após volume ser montado
+RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'set -e' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo '# Criar diretórios Laravel se não existirem' >> /docker-entrypoint.sh && \
+    echo 'mkdir -p storage/framework/{sessions,views,cache}' >> /docker-entrypoint.sh && \
+    echo 'mkdir -p storage/logs' >> /docker-entrypoint.sh && \
+    echo 'mkdir -p bootstrap/cache' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo '# Ajustar permissões' >> /docker-entrypoint.sh && \
+    echo 'chmod -R 775 storage bootstrap/cache 2>/dev/null || true' >> /docker-entrypoint.sh && \
+    echo 'chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true' >> /docker-entrypoint.sh && \
+    echo '' >> /docker-entrypoint.sh && \
+    echo '# Executar comando' >> /docker-entrypoint.sh && \
+    echo 'exec "$@"' >> /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
 # Expor portas
 EXPOSE 80 9000
+
+# Entrypoint para configurar permissões
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Iniciar Supervisor (gerencia Nginx e PHP-FPM)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
