@@ -235,6 +235,94 @@ git push origin main
 
 ---
 
+## 💻 Desenvolvimento Local (Minikube)
+
+### Após Reiniciar a Máquina
+
+Quando você reinicia seu computador, o minikube não inicia automaticamente. Siga estes passos:
+
+```bash
+# 1. Iniciar o minikube
+minikube start
+
+# 2. Verificar se está rodando
+kubectl get nodes
+# Deve mostrar: Ready
+
+# 3. Verificar os pods do seu projeto
+kubectl get pods -n {{NAMESPACE}}
+
+# 4. Se os pods não estiverem rodando, reaplicar as configurações
+kubectl apply -f .dev/kubernetes/
+
+# 5. Aguardar pods ficarem prontos
+kubectl wait --for=condition=ready pod -l app=postgres -n {{NAMESPACE}} --timeout=120s
+kubectl wait --for=condition=ready pod -l app=redis -n {{NAMESPACE}} --timeout=120s
+kubectl wait --for=condition=ready pod -l app={{PROJECT_NAME}} -n {{NAMESPACE}} --timeout=120s
+```
+
+### Acessar a Aplicação Local
+
+```bash
+# Obter a URL do serviço
+minikube service app -n {{NAMESPACE}} --url
+
+# Ou usar port-forward
+kubectl port-forward -n {{NAMESPACE}} svc/app 8080:80
+
+# Acessar no navegador
+# http://localhost:8080
+```
+
+### Comandos Úteis para Desenvolvimento
+
+```bash
+# Parar o minikube (liberar recursos)
+minikube stop
+
+# Ver status
+minikube status
+
+# Acessar dashboard do Kubernetes
+minikube dashboard
+
+# Ou rodar dashboard em background (não trava o terminal)
+minikube dashboard &
+
+# Ou apenas obter a URL (sem abrir browser)
+minikube dashboard --url
+
+# Ver logs em tempo real
+kubectl logs -f deployment/app -n {{NAMESPACE}}
+
+# Executar migrations
+kubectl exec -it deployment/app -n {{NAMESPACE}} -- php artisan migrate
+
+# Executar comandos no container
+kubectl exec -it deployment/app -n {{NAMESPACE}} -- bash
+
+# Rebuild e redeploy (após mudanças no código)
+eval $(minikube docker-env)  # Usar Docker do minikube
+docker build -t {{PROJECT_NAME}}:dev .
+kubectl rollout restart deployment/app -n {{NAMESPACE}}
+```
+
+### Limpar Tudo e Recomeçar
+
+```bash
+# Deletar todos os recursos do namespace
+kubectl delete namespace {{NAMESPACE}}
+
+# Recriar do zero
+kubectl apply -f .dev/kubernetes/
+
+# Ou deletar o minikube inteiro
+minikube delete
+minikube start
+```
+
+---
+
 ## 🐛 Problemas Comuns
 
 ### Pods não iniciam
