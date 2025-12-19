@@ -129,6 +129,9 @@ image-endpoint: unix:///run/containerd/containerd.sock
 timeout: 2
 EOF
 
+# Instalar crictl (se necessário)
+apt install -y cri-tools
+
 # Verificar se containerd está funcionando
 crictl ps
 # Deve retornar lista vazia (sem erros)
@@ -190,6 +193,36 @@ kubectl get nodes
 kubectl get pods -A
 
 # Todos os pods devem estar Running
+```
+
+### Troubleshooting Rápido (CRI/containerd)
+
+Se aparecer erro semelhante a: "unknown service runtime.v1.RuntimeService" ou o `crictl` não funcionar:
+
+```bash
+# 1) Reconfigurar containerd com cgroup systemd
+systemctl stop kubelet containerd
+rm -f /etc/containerd/config.toml
+containerd config default > /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+systemctl restart containerd
+systemctl enable containerd
+
+# 2) Instalar e configurar crictl
+apt install -y cri-tools
+cat > /etc/crictl.yaml <<EOF
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 2
+EOF
+crictl ps  # Deve funcionar (lista vazia)
+
+# 3) Resetar kubeadm e inicializar novamente
+kubeadm reset -f
+kubeadm init \
+  --pod-network-cidr=10.244.0.0/16 \
+  --apiserver-advertise-address=SEU_IP_VPS_AQUI \
+  --node-name=k8s-laravel-cluster
 ```
 
 ---
