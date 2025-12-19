@@ -134,12 +134,39 @@ kubelet --version
 
 ## 5. Inicializar Cluster
 
+### Pré-requisitos: Verificar Container Runtime
+
 ```bash
-# Iniciar cluster (substitua SEU_IP_VPS)
+# Verificar se containerd está rodando
+systemctl status containerd
+
+# Se não estiver rodando, iniciar
+systemctl start containerd
+systemctl enable containerd
+
+# Verificar novamente
+systemctl status containerd
+```
+
+### Inicializar o Cluster
+
+```bash
+# ⚠️ IMPORTANTE: Substitua SEU_IP_VPS pelo IP público real da VPS!
+# Exemplo: se seu IP é 203.0.113.45, use:
+#   kubeadm init \
+#     --pod-network-cidr=10.244.0.0/16 \
+#     --apiserver-advertise-address=203.0.113.45 \
+#     --node-name=k8s-laravel-cluster
+
 kubeadm init \
   --pod-network-cidr=10.244.0.0/16 \
-  --apiserver-advertise-address=SEU_IP_VPS \
+  --apiserver-advertise-address=148.230.78.184 \
   --node-name=k8s-laravel-cluster
+
+# Se receber aviso sobre hostname não alcançável, é apenas um aviso (pode ignorar)
+# Se receber erro "container runtime is not running":
+#   systemctl restart containerd
+#   Depois repita o kubeadm init acima
 
 # Configurar kubectl para root
 mkdir -p $HOME/.kube
