@@ -274,6 +274,56 @@ kubectl port-forward -n {{NAMESPACE}} svc/app 8080:80
 # http://localhost:8080
 ```
 
+### Verificações Importantes
+
+#### Volumes Compartilhados (Docker Compose + Minikube)
+
+Certifique-se de que os volumes estão configurados corretamente:
+
+```bash
+# 1. Verificar volumes do Docker Compose (.dev/)
+docker compose -f .dev/docker-compose.yml config | grep -A 5 volumes
+
+# 2. Verificar volumes do Minikube
+kubectl get pv  # Persistent Volumes
+kubectl get pvc -n {{NAMESPACE}}  # Persistent Volume Claims
+
+# 3. Verificar se os dados estão persistindo
+# PostgreSQL:
+kubectl exec -it postgres-0 -n {{NAMESPACE}} -- psql -U {{DB_USER}} -d {{DB_NAME}} -c '\dt'
+
+# Redis:
+kubectl exec -it redis-0 -n {{NAMESPACE}} -- redis-cli ping
+
+# 4. Verificar montagem dos volumes nos pods
+kubectl describe pod postgres-0 -n {{NAMESPACE}} | grep -A 10 Volumes
+kubectl describe pod redis-0 -n {{NAMESPACE}} | grep -A 10 Volumes
+
+# 5. Caminho dos volumes no Minikube
+minikube ssh
+ls -la /data/postgresql/{{NAMESPACE}}
+ls -la /data/redis/{{NAMESPACE}}
+exit
+```
+
+**Problemas comuns com volumes:**
+
+```bash
+# Se volumes não existem no Minikube, criar:
+minikube ssh
+sudo mkdir -p /data/postgresql/{{NAMESPACE}} /data/redis/{{NAMESPACE}}
+sudo chmod 700 /data/postgresql/{{NAMESPACE}}
+sudo chmod 755 /data/redis/{{NAMESPACE}}
+exit
+
+# Reiniciar pods para remontar volumes
+kubectl rollout restart statefulset/postgres -n {{NAMESPACE}}
+kubectl rollout restart statefulset/redis -n {{NAMESPACE}}
+
+# Verificar se volumes foram montados
+kubectl get pods -n {{NAMESPACE}} -w  # Aguardar ficar Running
+```
+
 ### Comandos Úteis para Desenvolvimento
 
 ```bash
