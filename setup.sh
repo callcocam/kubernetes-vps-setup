@@ -35,20 +35,44 @@ if [[ ! -f "$SCRIPT_DIR/templates/namespace.yaml.stub" ]]; then
     exit 1
 fi
 
-# Configuração automática: Local + Produção
+# Escolher ambiente(s) a configurar
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  🔧 CONFIGURAÇÃO: DESENVOLVIMENTO + PRODUÇÃO${NC}"
+echo -e "${GREEN}  🔧 ESCOLHA O AMBIENTE${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-echo -e "${CYAN}Este script irá gerar:${NC}"
-echo -e "  ${YELLOW}✓${NC} 🛠️  Arquivos de ${CYAN}Desenvolvimento Local${NC} → pasta ${GREEN}.dev/${NC} (não sobe pro git)"
-echo -e "  ${YELLOW}✓${NC} 🚀 Arquivos de ${CYAN}Produção Kubernetes${NC} → ${GREEN}kubernetes/${NC} + GitHub Actions"
-echo ""
-echo -e "${YELLOW}💡 Desenvolvimento local é executado manualmente com docker compose${NC}"
-echo -e "${YELLOW}💡 Produção é feita via GitHub Actions (só commit/push)${NC}\n"
+echo -e "${YELLOW}Qual ambiente você deseja configurar?${NC}\n"
 
-SETUP_LOCAL=true
-SETUP_PROD=true
+echo -e "${CYAN}1)${NC} 🛠️  ${YELLOW}Desenvolvimento Local${NC} apenas"
+echo -e "   └─ Gera apenas arquivos .dev/ (Docker Compose)"
+echo -e "   └─ Não precisa de VPS, GitHub, nem Kubernetes\n"
+
+echo -e "${CYAN}2)${NC} 🚀 ${GREEN}Produção${NC} apenas (VPS + Kubernetes)"
+echo -e "   └─ Gera kubernetes/, docker/, .github/workflows/"
+echo -e "   └─ Requer VPS configurada e GitHub Container Registry\n"
+
+echo -e "${CYAN}3)${NC} 🔄 ${PURPLE}Ambos${NC} (Local + Produção) ${YELLOW}[Recomendado]${NC}"
+echo -e "   └─ Gera todos os arquivos"
+echo -e "   └─ Trabalhe localmente e faça deploy para produção\n"
+
+read -p "$(echo -e ${BLUE}Escolha uma opção [1-3]:${NC} )" ENV_CHOICE
+
+case $ENV_CHOICE in
+    1)
+        echo -e "\n${YELLOW}✅ Configuração: DESENVOLVIMENTO LOCAL${NC}\n"
+        SETUP_LOCAL=true
+        SETUP_PROD=false
+        ;;
+    2)
+        echo -e "\n${GREEN}✅ Configuração: PRODUÇÃO${NC}\n"
+        SETUP_LOCAL=false
+        SETUP_PROD=true
+        ;;
+    3|*)
+        echo -e "\n${PURPLE}✅ Configuração: LOCAL + PRODUÇÃO${NC}\n"
+        SETUP_LOCAL=true
+        SETUP_PROD=true
+        ;;
+esac
 
 # Função para ler input com valor padrão
 read_input() {
@@ -92,30 +116,59 @@ echo -e "${GREEN}═════════════════════
 
 # Informações do Projeto
 read_input "📦 Nome do projeto (ex: meu-app):" "kb-app" PROJECT_NAME
-read_input "🏢 Namespace Kubernetes (ex: ${PROJECT_NAME}):" "$PROJECT_NAME" NAMESPACE
-read_input "🌐 Domínio principal (ex: app.exemplo.com):" "" DOMAIN
 
-echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  INFORMAÇÕES DO SERVIDOR VPS${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+if [[ "$SETUP_PROD" == true ]]; then
+    read_input "🏢 Namespace Kubernetes (ex: ${PROJECT_NAME}):" "$PROJECT_NAME" NAMESPACE
+    read_input "🌐 Domínio principal (ex: app.exemplo.com):" "" DOMAIN
+else
+    NAMESPACE="$PROJECT_NAME"
+    DOMAIN="localhost"
+fi
 
-# Informações do Servidor
-read_input "🖥️  IP da VPS:" "" VPS_IP
+# Configurações para ambiente LOCAL (quando ambos ou só local)
+if [[ "$SETUP_LOCAL" == true ]]; then
+    # Para desenvolvimento local, usar domínio .test
+    LOCAL_DOMAIN="${PROJECT_NAME}.test"
+    LOCAL_IP="127.0.0.1"
+    
+    if [[ "$SETUP_PROD" == true ]]; then
+        echo -e "\n${CYAN}💡 Para ambiente LOCAL:${NC}"
+        echo -e "   Domínio local: ${GREEN}${LOCAL_DOMAIN}${NC}"
+        echo -e "   IP local: ${GREEN}${LOCAL_IP}${NC}"
+    fi
+fi
 
-echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  GITHUB CONTAINER REGISTRY${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}  INFORMAÇÕES DO SERVIDOR VPS${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# GitHub Container Registry
-read_input "🐙 Usuário/Organização do GitHub:" "" GITHUB_USER
-echo -e "${YELLOW}💡 Nome do repositório: apenas o nome, SEM usuário/org!${NC}"
-echo -e "${YELLOW}   ✅ Correto: meu-app${NC}"
-echo -e "${YELLOW}   ❌ Errado: seu-usuario/meu-app${NC}"
-read_input "📦 Nome do repositório GitHub:" "$PROJECT_NAME" GITHUB_REPO_NAME
+    # Informações do Servidor
+    read_input "🖥️  IP da VPS:" "" VPS_IP
+else
+    VPS_IP="127.0.0.1"
+fi
 
-# Remover qualquer prefixo de usuário caso o usuário tenha digitado errado
-GITHUB_REPO_NAME="${GITHUB_REPO_NAME##*/}"
-GITHUB_REPO="${GITHUB_USER}/${GITHUB_REPO_NAME}"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}  GITHUB CONTAINER REGISTRY${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
+
+    # GitHub Container Registry
+    read_input "🐙 Usuário/Organização do GitHub:" "" GITHUB_USER
+    echo -e "${YELLOW}💡 Nome do repositório: apenas o nome, SEM usuário/org!${NC}"
+    echo -e "${YELLOW}   ✅ Correto: meu-app${NC}"
+    echo -e "${YELLOW}   ❌ Errado: seu-usuario/meu-app${NC}"
+    read_input "📦 Nome do repositório GitHub:" "$PROJECT_NAME" GITHUB_REPO_NAME
+
+    # Remover qualquer prefixo de usuário caso o usuário tenha digitado errado
+    GITHUB_REPO_NAME="${GITHUB_REPO_NAME##*/}"
+    GITHUB_REPO="${GITHUB_USER}/${GITHUB_REPO_NAME}"
+else
+    GITHUB_USER="local"
+    GITHUB_REPO_NAME="$PROJECT_NAME"
+    GITHUB_REPO="local/${PROJECT_NAME}"
+fi
 
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}  CONFIGURAÇÕES DO LARAVEL${NC}"
@@ -219,28 +272,34 @@ echo -e "\n${GREEN}════════════════════�
 echo -e "${GREEN}  RECURSOS (CPU/MEMÓRIA)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-echo -e "${YELLOW}💡 Escolha um perfil de recursos ou configure manualmente:${NC}\n"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "${YELLOW}💡 Escolha um perfil de recursos ou configure manualmente:${NC}\n"
 
-echo -e "${CYAN}1)${NC} 🚀 ${GREEN}Produção VPS${NC} - Alta disponibilidade"
-echo -e "   └─ 2 réplicas | RAM: 512Mi-1Gi | CPU: 500m-1000m"
-echo -e "   └─ Recomendado para apps em produção com tráfego real\n"
+    echo -e "${CYAN}1)${NC} 🚀 ${GREEN}Produção VPS${NC} - Alta disponibilidade"
+    echo -e "   └─ 2 réplicas | RAM: 512Mi-1Gi | CPU: 500m-1000m"
+    echo -e "   └─ Recomendado para apps em produção com tráfego real\n"
 
-echo -e "${CYAN}2)${NC} 💻 ${YELLOW}Local (Minikube)${NC} - Recursos mínimos"
-echo -e "   └─ 1 réplica | RAM: 128Mi-256Mi | CPU: 100m-250m"
-echo -e "   └─ Otimizado para Kubernetes local (Minikube, Kind, k3d)\n"
+    echo -e "${CYAN}2)${NC} 💻 ${YELLOW}Local (Minikube)${NC} - Recursos mínimos"
+    echo -e "   └─ 1 réplica | RAM: 128Mi-256Mi | CPU: 100m-250m"
+    echo -e "   └─ Otimizado para Kubernetes local (Minikube, Kind, k3d)\n"
 
-echo -e "${CYAN}3)${NC} 🛠️  ${YELLOW}Desenvolvimento${NC} - Recursos moderados"
-echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
-echo -e "   └─ Para ambiente de desenvolvimento/staging\n"
+    echo -e "${CYAN}3)${NC} 🛠️  ${YELLOW}Desenvolvimento${NC} - Recursos moderados"
+    echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
+    echo -e "   └─ Para ambiente de desenvolvimento/staging\n"
 
-echo -e "${CYAN}4)${NC} 🧪 ${BLUE}Test${NC} - Recursos moderados"
-echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
-echo -e "   └─ Para testes automatizados e homologação\n"
+    echo -e "${CYAN}4)${NC} 🧪 ${BLUE}Test${NC} - Recursos moderados"
+    echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
+    echo -e "   └─ Para testes automatizados e homologação\n"
 
-echo -e "${CYAN}5)${NC} ⚙️  ${PURPLE}Manual${NC} - Configuração customizada"
-echo -e "   └─ Você define todos os valores\n"
+    echo -e "${CYAN}5)${NC} ⚙️  ${PURPLE}Manual${NC} - Configuração customizada"
+    echo -e "   └─ Você define todos os valores\n"
 
-read -p "$(echo -e ${BLUE}Escolha uma opção [1-5]:${NC} )" RESOURCE_PROFILE
+    read -p "$(echo -e ${BLUE}Escolha uma opção [1-5]:${NC} )" RESOURCE_PROFILE
+else
+    # Para desenvolvimento local apenas, usar perfil mínimo
+    RESOURCE_PROFILE=2
+    echo -e "${CYAN}💡 Configuração para desenvolvimento local: perfil mínimo${NC}\n"
+fi
 
 case $RESOURCE_PROFILE in
     1)
@@ -346,14 +405,24 @@ process_template() {
     local template_file="$1"
     local output_file="$2"
     local use_ghcr="${3:-true}"  # Por padrão usa ghcr.io (produção)
+    local is_local="${4:-false}"  # Se true, usa valores de desenvolvimento local
     
     cp "$template_file" "$output_file"
+    
+    # Decidir quais valores usar baseado no ambiente
+    local domain_value="$DOMAIN"
+    local ip_value="$VPS_IP"
+    
+    if [[ "$is_local" == "true" ]]; then
+        domain_value="$LOCAL_DOMAIN"
+        ip_value="$LOCAL_IP"
+    fi
     
     # Substituições
     sed -i "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" "$output_file"
     sed -i "s|{{NAMESPACE}}|${NAMESPACE}|g" "$output_file"
-    sed -i "s|{{DOMAIN}}|${DOMAIN}|g" "$output_file"
-    sed -i "s|{{VPS_IP}}|${VPS_IP}|g" "$output_file"
+    sed -i "s|{{DOMAIN}}|${domain_value}|g" "$output_file"
+    sed -i "s|{{VPS_IP}}|${ip_value}|g" "$output_file"
     sed -i "s|{{GITHUB_USER}}|${GITHUB_USER}|g" "$output_file"
     sed -i "s|{{GITHUB_REPO_NAME}}|${GITHUB_REPO_NAME}|g" "$output_file"
     sed -i "s|{{GITHUB_REPO}}|${GITHUB_REPO}|g" "$output_file"
@@ -389,29 +458,30 @@ process_template() {
 }
 
 # Gerar arquivos para Desenvolvimento Local (pasta .dev/)
-echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  🛠️  DESENVOLVIMENTO LOCAL (.dev/ - não versiona)${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
+if [[ "$SETUP_LOCAL" == true ]]; then
+    echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}  🛠️  DESENVOLVIMENTO LOCAL (.dev/ - não versiona)${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Docker Compose
-process_template "$SCRIPT_DIR/templates/docker-compose.yml.stub" "$DEV_DIR/docker-compose.yml"
+    # Docker Compose (com valores locais)
+    process_template "$SCRIPT_DIR/templates/docker-compose.yml.stub" "$DEV_DIR/docker-compose.yml" "true" "true"
 
-# Dockerfile para dev
-process_template "$SCRIPT_DIR/templates/Dockerfile.dev.stub" "$DEV_DIR/Dockerfile.dev"
+    # Dockerfile para dev
+    process_template "$SCRIPT_DIR/templates/Dockerfile.dev.stub" "$DEV_DIR/Dockerfile.dev" "true" "true"
 
-# Nginx dev
-process_template "$SCRIPT_DIR/templates/nginx-dev.conf.stub" "$DEV_DIR/nginx.conf"
+    # Nginx dev
+    process_template "$SCRIPT_DIR/templates/nginx-dev.conf.stub" "$DEV_DIR/nginx.conf" "true" "true"
 
-# Supervisor dev
-process_template "$SCRIPT_DIR/templates/supervisord-dev.conf.stub" "$DEV_DIR/supervisord.conf"
+    # Supervisor dev
+    process_template "$SCRIPT_DIR/templates/supervisord-dev.conf.stub" "$DEV_DIR/supervisord.conf" "true" "true"
 
-# PHP config
-process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DEV_DIR/php.ini"
+    # PHP config
+    process_template "$SCRIPT_DIR/templates/php-local.ini.stub" "$DEV_DIR/php.ini" "true" "true"
 
-# .env.local
-process_template "$SCRIPT_DIR/templates/env.local.stub" "$DEV_DIR/.env.local"
+    # .env.local (com valores locais)
+    process_template "$SCRIPT_DIR/templates/env.local.stub" "$DEV_DIR/.env.local" "true" "true"
 
-# Script de inicialização automática
+    # Script de inicialização automática
 cat > "$DEV_DIR/init.sh" << 'INITSCRIPT'
 #!/bin/bash
 set -e
@@ -502,10 +572,10 @@ echo "🌐 Acesse: http://localhost:8000"
 echo "📧 Mailhog: http://localhost:8025"
 INITSCRIPT
 
-chmod +x "$DEV_DIR/init.sh"
+    chmod +x "$DEV_DIR/init.sh"
 
-# README para desenvolvimento
-cat > "$DEV_DIR/README.md" << 'DEVREADME'
+    # README para desenvolvimento
+    cat > "$DEV_DIR/README.md" << 'DEVREADME'
 # 🛠️ Ambiente de Desenvolvimento Local
 
 Esta pasta contém os arquivos para rodar o projeto localmente com Docker Compose.
@@ -552,46 +622,53 @@ docker compose exec -T app php artisan migrate --force
 
 Veja: `kubernetes-vps-setup/DEV_LOCAL.md`
 DEVREADME
+fi
 
 # Gerar arquivos para Produção (Kubernetes + GitHub Actions)
-echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${CYAN}  🚀 PRODUÇÃO (Kubernetes + GitHub Actions)${NC}"
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}  🚀 PRODUÇÃO (Kubernetes + GitHub Actions)${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Processar templates Kubernetes PARA PRODUÇÃO (com ghcr.io)
-process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$OUTPUT_DIR/namespace.yaml"
-process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$OUTPUT_DIR/secrets.yaml"
-process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$OUTPUT_DIR/configmap.yaml"
-process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$OUTPUT_DIR/postgres.yaml"
-process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$OUTPUT_DIR/redis.yaml"
-process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$OUTPUT_DIR/deployment.yaml"
-process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$OUTPUT_DIR/service.yaml"
-process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$OUTPUT_DIR/ingress.yaml"
-process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert-issuer.yaml"
-process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
+    # Processar templates Kubernetes PARA PRODUÇÃO (com ghcr.io)
+    process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$OUTPUT_DIR/namespace.yaml"
+    process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$OUTPUT_DIR/secrets.yaml"
+    process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$OUTPUT_DIR/configmap.yaml"
+    process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$OUTPUT_DIR/postgres.yaml"
+    process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$OUTPUT_DIR/redis.yaml"
+    process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$OUTPUT_DIR/deployment.yaml"
+    process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$OUTPUT_DIR/service.yaml"
+    process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$OUTPUT_DIR/ingress.yaml"
+    process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert-issuer.yaml"
+    process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
+fi
 
 # Gerar arquivos Kubernetes PARA LOCAL (sem ghcr.io) em .dev/kubernetes/
-echo -e "\n${YELLOW}⏳ Gerando arquivos Kubernetes para ambiente local (.dev/kubernetes/)...${NC}"
-DEV_K8S_DIR="$DEV_DIR/kubernetes"
-mkdir -p "$DEV_K8S_DIR"
+if [[ "$SETUP_LOCAL" == true ]]; then
+    echo -e "\n${YELLOW}⏳ Gerando arquivos Kubernetes para ambiente local (.dev/kubernetes/)...${NC}"
+    DEV_K8S_DIR="$DEV_DIR/kubernetes"
+    mkdir -p "$DEV_K8S_DIR"
 
-process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$DEV_K8S_DIR/namespace.yaml" "false"
-process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$DEV_K8S_DIR/secrets.yaml" "false"
-process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$DEV_K8S_DIR/configmap.yaml" "false"
-process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$DEV_K8S_DIR/postgres.yaml" "false"
-process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$DEV_K8S_DIR/redis.yaml" "false"
-process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$DEV_K8S_DIR/deployment.yaml" "false"
-process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$DEV_K8S_DIR/service.yaml" "false"
-process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$DEV_K8S_DIR/ingress.yaml" "false"
-process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$DEV_K8S_DIR/migration-job.yaml" "false"
+    # Gerar manifests locais com domínio/IP local e SEM ghcr.io
+    process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$DEV_K8S_DIR/namespace.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$DEV_K8S_DIR/secrets.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$DEV_K8S_DIR/configmap.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$DEV_K8S_DIR/postgres.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$DEV_K8S_DIR/redis.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$DEV_K8S_DIR/deployment.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$DEV_K8S_DIR/service.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$DEV_K8S_DIR/ingress.yaml" "false" "true"
+    process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$DEV_K8S_DIR/migration-job.yaml" "false" "true"
 
 # Copiar README explicativo para .dev/kubernetes/
 cp "$SCRIPT_DIR/templates/dev-kubernetes-README.md" "$DEV_K8S_DIR/README.md"
 
-echo -e "${GREEN}✅ Arquivos Kubernetes local gerados (sem ghcr.io/)${NC}"
-echo -e "${CYAN}📄 Veja .dev/kubernetes/README.md para detalhes${NC}"
+    echo -e "${GREEN}✅ Arquivos Kubernetes local gerados (sem ghcr.io/)${NC}"
+    echo -e "${CYAN}📄 Veja .dev/kubernetes/README.md para detalhes${NC}"
+fi
 
-echo -e "\n${YELLOW}⏳ Gerando arquivos Docker (Produção)...${NC}"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "\n${YELLOW}⏳ Gerando arquivos Docker (Produção)...${NC}"
 
     # Processar templates Docker
     process_template "$SCRIPT_DIR/Dockerfile.stub" "$PROJECT_ROOT/Dockerfile"
@@ -601,14 +678,17 @@ echo -e "\n${YELLOW}⏳ Gerando arquivos Docker (Produção)...${NC}"
     if [[ ! -f "$PROJECT_ROOT/.dockerignore" ]]; then
         process_template "$SCRIPT_DIR/.dockerignore.stub" "$PROJECT_ROOT/.dockerignore"
     fi
+fi
 
-echo -e "\n${YELLOW}⏳ Gerando GitHub Actions (Deploy Automático)...${NC}"
+if [[ "$SETUP_PROD" == true ]]; then
+    echo -e "\n${YELLOW}⏳ Gerando GitHub Actions (Deploy Automático)...${NC}"
 
-# Processar templates GitHub Actions
-process_template "$SCRIPT_DIR/.github/workflows/deploy.yml.stub" "$GITHUB_DIR/deploy.yml"
-process_template "$SCRIPT_DIR/.github/workflows/docker-build.yml.stub" "$GITHUB_DIR/docker-build.yml"
-process_template "$SCRIPT_DIR/.github/workflows/tests.yml.stub" "$GITHUB_DIR/tests.yml"
-process_template "$SCRIPT_DIR/.github/workflows/lint.yml.stub" "$GITHUB_DIR/lint.yml"
+    # Processar templates GitHub Actions
+    process_template "$SCRIPT_DIR/.github/workflows/deploy.yml.stub" "$GITHUB_DIR/deploy.yml"
+    process_template "$SCRIPT_DIR/.github/workflows/docker-build.yml.stub" "$GITHUB_DIR/docker-build.yml"
+    process_template "$SCRIPT_DIR/.github/workflows/tests.yml.stub" "$GITHUB_DIR/tests.yml"
+    process_template "$SCRIPT_DIR/.github/workflows/lint.yml.stub" "$GITHUB_DIR/lint.yml"
+fi
 
 # Atualizar .gitignore para ignorar pasta .dev/
 echo -e "\n${YELLOW}⏳ Atualizando .gitignore...${NC}"

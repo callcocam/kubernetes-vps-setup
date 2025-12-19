@@ -48,7 +48,7 @@ cd meu-projeto
 
 ```bash
 # Dentro do diretório do projeto Laravel
-git clone https://github.com/SEU_USUARIO/kubernetes-vps-setup.git
+git clone https://github.com/{{GITHUB_REPO}}.git kubernetes-vps-setup
 cd kubernetes-vps-setup
 ```
 
@@ -63,20 +63,22 @@ cd kubernetes-vps-setup
 ### Perguntas do Setup
 
 ```bash
-📦 Nome do projeto: meu-app
-🏢 Namespace: meu-app
-🌐 Domínio: meuapp.com  # VPS: domínio real | Minikube: meuapp.test
+📦 Nome do projeto: {{PROJECT_NAME}}
+🏢 Namespace: {{NAMESPACE}}
+🌐 Domínio: {{DOMAIN}}  # Para produção (VPS)
 
-🖥️  IP da VPS: 
-  - VPS: SEU_IP_PUBLICO
-  - Minikube: 127.0.0.1
+💡 Para ambiente LOCAL (se escolher "Ambos"):
+   Domínio local: {{PROJECT_NAME}}.test (gerado automaticamente)
+   IP local: 127.0.0.1
 
-🐙 Usuário GitHub: seu-usuario
-📦 Nome do repositório: meu-app  # SEM usuário/org, apenas nome!
+🖥️  IP da VPS: {{VPS_IP}}
+
+🐙 Usuário GitHub: {{GITHUB_USER}}
+📦 Nome do repositório: {{GITHUB_REPO_NAME}}  # SEM usuário/org, apenas nome!
 
 🔑 APP_KEY: [ENTER - gera automático]
-📧 Email: admin@meuapp.com
-🗄️  Banco: laravel
+📧 Email: {{APP_EMAIL}}
+🗄️  Banco: {{DB_NAME}}
 👤 Usuário: laravel
 🔐 Senhas: [ENTER - gera automático]
 ☁️  Spaces: n
@@ -90,7 +92,7 @@ cd kubernetes-vps-setup
 
 **Arquivos gerados:**
 ```
-seu-projeto/
+{{PROJECT_NAME}}/
 ├── kubernetes/          # Manifests K8s
 ├── docker/             # Configs Docker
 ├── .github/workflows/  # CI/CD
@@ -162,8 +164,8 @@ A       *       SEU_IP_VPS
 **Testar:**
 ```bash
 # Aguardar 1-5 minutos para propagar
-nslookup meuapp.com
-ping meuapp.com
+nslookup {{DOMAIN}}
+ping {{DOMAIN}}
 ```
 
 ---
@@ -172,15 +174,15 @@ ping meuapp.com
 
 ```bash
 # Na VPS
-ssh root@SEU_IP_VPS
+ssh root@{{VPS_IP}}
 
 # Criar diretórios para este projeto
-mkdir -p /data/postgresql/meu-app
-mkdir -p /data/redis/meu-app
+mkdir -p /data/postgresql/{{NAMESPACE}}
+mkdir -p /data/redis/{{NAMESPACE}}
 
 # Ajustar permissões
-chmod 700 /data/postgresql/meu-app
-chmod 755 /data/redis/meu-app
+chmod 700 /data/postgresql/{{NAMESPACE}}
+chmod 755 /data/redis/{{NAMESPACE}}
 
 exit
 ```
@@ -210,13 +212,13 @@ git push origin main
 
 ```bash
 # Aguardar pods ficarem prontos
-kubectl get pods -n meu-app
+kubectl get pods -n {{NAMESPACE}}
 
 # Via migration-job (recomendado)
 kubectl apply -f kubernetes/migration-job.yaml
 
 # Ou manualmente
-kubectl exec -it -n meu-app deployment/app -- php artisan migrate --force
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- php artisan migrate --force
 ```
 
 ---
@@ -225,15 +227,15 @@ kubectl exec -it -n meu-app deployment/app -- php artisan migrate --force
 
 ```bash
 # Ver certificado (pode levar 2-5 minutos)
-kubectl get certificate -n meu-app
-kubectl describe certificate -n meu-app app-tls
+kubectl get certificate -n {{NAMESPACE}}
+kubectl describe certificate -n {{NAMESPACE}} app-tls
 
 # Status "Ready: True" = SSL funcionando!
 ```
 
 **Acessar aplicação:**
 ```
-https://meuapp.com
+https://{{DOMAIN}}
 ```
 
 ---
@@ -251,10 +253,10 @@ https://meuapp.com
 cd ..
 
 # Build usando Dockerfile gerado
-docker build -t seu-usuario/meu-app:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # Verificar imagem
-docker images | grep meu-app
+docker images | grep {{GITHUB_REPO_NAME}}
 ```
 
 ---
@@ -263,10 +265,10 @@ docker images | grep meu-app
 
 ```bash
 # Carregar imagem no cluster Minikube
-minikube image load seu-usuario/meu-app:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # Verificar
-minikube image ls | grep meu-app
+minikube image ls | grep {{GITHUB_REPO_NAME}}
 ```
 
 ---
@@ -280,10 +282,10 @@ minikube image ls | grep meu-app
 ```bash
 # Conferir que as imagens estão corretas (SEM ghcr.io/)
 grep "image:" .dev/kubernetes/deployment.yaml | head -1
-# Deve mostrar: image: seu-usuario/meu-app:latest
+# Deve mostrar: image: {{GITHUB_REPO}}:latest
 
 grep "image:" .dev/kubernetes/migration-job.yaml | head -1
-# Deve mostrar: image: seu-usuario/meu-app:latest
+# Deve mostrar: image: {{GITHUB_REPO}}:latest
 ```
 
 **Por quê dois diretórios?**
@@ -309,8 +311,8 @@ kubectl apply -f .dev/kubernetes/postgres.yaml
 kubectl apply -f .dev/kubernetes/redis.yaml
 
 # Aguardar databases ficarem Ready
-kubectl wait --for=condition=ready pod -l app=postgres -n meu-app --timeout=120s
-kubectl wait --for=condition=ready pod -l app=redis -n meu-app --timeout=120s
+kubectl wait --for=condition=ready pod -l app=postgres -n {{NAMESPACE}} --timeout=120s
+kubectl wait --for=condition=ready pod -l app=redis -n {{NAMESPACE}} --timeout=120s
 
 # Aplicar aplicação e serviços
 kubectl apply -f .dev/kubernetes/deployment.yaml
@@ -321,8 +323,8 @@ kubectl apply -f .dev/kubernetes/ingress.yaml
 ```
 
 **Por quê .dev/kubernetes/?**
-- `.dev/kubernetes/` → Imagens locais (ex: `callcocam/meu-app:latest`)
-- `kubernetes/` → Imagens GHCR (ex: `ghcr.io/callcocam/meu-app:latest`)
+- `.dev/kubernetes/` → Imagens locais (ex: `{{GITHUB_REPO}}:latest`)
+- `kubernetes/` → Imagens GHCR (ex: `ghcr.io/{{GITHUB_REPO}}:latest`)
 - O diretório `.dev/` não vai pro Git, garantindo que você pode testar localmente **sem quebrar produção**!
 
 ---
@@ -334,7 +336,7 @@ kubectl apply -f .dev/kubernetes/ingress.yaml
 kubectl apply -f .dev/kubernetes/migration-job.yaml
 
 # Acompanhar logs
-kubectl logs -f job/migration -n meu-app
+kubectl logs -f job/migration -n {{NAMESPACE}}
 ```
 
 ---
@@ -347,11 +349,13 @@ kubectl logs -f job/migration -n meu-app
 # Editar arquivo
 sudo nano /etc/hosts
 
-# Adicionar linha
-127.0.0.1 meuapp.test
+# Adicionar linha (usar o domínio gerado: PROJETO.test)
+127.0.0.1 {{PROJECT_NAME}}.test
 
 # Salvar: Ctrl+O, Enter, Ctrl+X
 ```
+
+**💡 Dica**: O `setup.sh` gera automaticamente `PROJETO.test` como domínio local.
 
 ### 9.2 Iniciar Minikube Tunnel
 
@@ -363,9 +367,13 @@ minikube tunnel
 ### 9.3 Acessar no Navegador
 
 ```bash
-# Abrir navegador em:
-http://meuapp.test
+# Abrir navegador em (usar o domínio gerado):
+http://{{PROJECT_NAME}}.test
 ```
+
+**💡 Se escolheu "Ambos" no setup.sh**:
+- Produção (VPS): `https://{{DOMAIN}}`
+- Local (Minikube): `http://{{PROJECT_NAME}}.test`
 
 ---
 
@@ -375,18 +383,18 @@ http://meuapp.test
 
 ```bash
 # Verificar logs
-kubectl describe pod -n meu-app -l app=laravel-app
+kubectl describe pod -n {{NAMESPACE}} -l app=laravel-app
 
 # Recriar secret para GHCR
-kubectl delete secret ghcr-secret -n meu-app
+kubectl delete secret ghcr-secret -n {{NAMESPACE}}
 kubectl create secret docker-registry ghcr-secret \
   --docker-server=ghcr.io \
-  --docker-username=SEU_USUARIO \
+  --docker-username={{GITHUB_USER}} \
   --docker-password=SEU_TOKEN_GHCR \
-  -n meu-app
+  -n {{NAMESPACE}}
 
 # Reiniciar
-kubectl rollout restart deployment/app -n meu-app
+kubectl rollout restart deployment/app -n {{NAMESPACE}}
 ```
 
 ### VPS: SSL não emite
@@ -396,10 +404,10 @@ kubectl rollout restart deployment/app -n meu-app
 kubectl logs -n cert-manager -l app=cert-manager
 
 # Ver certificado
-kubectl describe certificate -n meu-app app-tls
+kubectl describe certificate -n {{NAMESPACE}} app-tls
 
 # Deletar e recriar
-kubectl delete certificate app-tls -n meu-app
+kubectl delete certificate app-tls -n {{NAMESPACE}}
 kubectl apply -f kubernetes/ingress.yaml
 ```
 
@@ -407,16 +415,16 @@ kubectl apply -f kubernetes/ingress.yaml
 
 ```bash
 # Verificar se existe localmente
-docker images | grep meu-app
+docker images | grep {{GITHUB_REPO_NAME}}
 
 # Rebuild
-docker build -t seu-usuario/meu-app:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # Recarregar no Minikube
-minikube image load seu-usuario/meu-app:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # Reiniciar pod
-kubectl delete pod -n meu-app -l app=laravel-app
+kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
 ```
 
 ### Minikube: Ingress não responde
@@ -428,15 +436,15 @@ kubectl get pods -n ingress-nginx
 # Verificar tunnel está ativo
 minikube tunnel
 
-# Verificar /etc/hosts
-cat /etc/hosts | grep meuapp.test
+# Verificar /etc/hosts (usar domínio gerado: PROJETO.test)
+cat /etc/hosts | grep {{PROJECT_NAME}}.test
 ```
 
 ### CrashLoopBackOff (VPS ou Minikube)
 
 ```bash
 # Ver logs
-kubectl logs -n meu-app -l app=laravel-app --previous
+kubectl logs -n {{NAMESPACE}} -l app=laravel-app --previous
 
 # Causas comuns:
 # - APP_KEY não configurada
@@ -444,7 +452,7 @@ kubectl logs -n meu-app -l app=laravel-app --previous
 # - Erro no código
 
 # Acessar container
-kubectl exec -it -n meu-app deployment/app -- bash
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- bash
 php artisan config:cache
 php artisan migrate --force
 exit
@@ -456,29 +464,29 @@ exit
 
 ```bash
 # Ver tudo no namespace
-kubectl get all -n meu-app
+kubectl get all -n {{NAMESPACE}}
 
 # Ver recursos (CPU/RAM)
-kubectl top pods -n meu-app
+kubectl top pods -n {{NAMESPACE}}
 kubectl top nodes
 
 # Ver logs em tempo real
-kubectl logs -f -n meu-app deployment/app
+kubectl logs -f -n {{NAMESPACE}} deployment/app
 
 # Escalar aplicação
-kubectl scale deployment app -n meu-app --replicas=3
+kubectl scale deployment app -n {{NAMESPACE}} --replicas=3
 
 # Reiniciar pods
-kubectl rollout restart deployment/app -n meu-app
+kubectl rollout restart deployment/app -n {{NAMESPACE}}
 
 # Executar comandos Artisan
-kubectl exec -it -n meu-app deployment/app -- php artisan tinker
+kubectl exec -it -n {{NAMESPACE}} deployment/app -- php artisan tinker
 
 # Acessar PostgreSQL
-kubectl exec -it -n meu-app statefulset/postgres -- psql -U laravel -d laravel
+kubectl exec -it -n {{NAMESPACE}} statefulset/postgres -- psql -U {{DB_USER}} -d {{DB_NAME}}
 
 # Deletar projeto completo
-kubectl delete namespace meu-app
+kubectl delete namespace {{NAMESPACE}}
 ```
 
 ---
@@ -500,16 +508,16 @@ git push origin main
 
 ```bash
 # 1. Rebuild da imagem
-docker build -t seu-usuario/meu-app:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # 2. Recarregar no Minikube
-minikube image load seu-usuario/meu-app:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # 3. Reiniciar pods
-kubectl delete pod -n meu-app -l app=laravel-app
+kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
 
 # 4. Aguardar
-kubectl get pods -n meu-app -w
+kubectl get pods -n {{NAMESPACE}} -w
 ```
 
 ---
@@ -520,7 +528,7 @@ kubectl get pods -n meu-app -w
 
 ```bash
 # Deletar namespace completo (remove TUDO)
-kubectl delete namespace meu-app
+kubectl delete namespace {{NAMESPACE}}
 ```
 
 ### Minikube: Deletar Múltiplos Projetos
