@@ -1,3 +1,14 @@
+Você está certo! O documento está com problemas de formatação. Vou corrigir:
+
+**Principais problemas encontrados:**
+
+1. **Seção 5** - Bloco de código não fechado corretamente
+2. **Seção 8.1** aparece antes da seção 8 (ordem errada)
+3. Faltam fechamentos de blocos markdown
+
+Aqui está a versão corrigida:
+
+```markdown
 # 🖥️ Configuração da VPS para Kubernetes
 
 > ⏱️ **Tempo**: ~40 minutos | **Execute uma vez por VPS**
@@ -129,20 +140,17 @@ image-endpoint: unix:///run/containerd/containerd.sock
 timeout: 2
 EOF
 
-# Instalar crictl
-# Via apt (se disponível)
-apt install -y cri-tools || true
-
-# Fallback: baixar binário (exemplo para amd64)
+# Instalar crictl (baixar binário)
 CRICTL_VERSION=v1.28.0
 curl -L \
   https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz \
   -o /tmp/crictl.tar.gz
 tar -zxvf /tmp/crictl.tar.gz -C /usr/local/bin
 chmod +x /usr/local/bin/crictl
-crictl version
+rm -f /tmp/crictl.tar.gz
 
 # Verificar se containerd está funcionando
+crictl version
 crictl ps
 # Deve retornar lista vazia (sem erros)
 
@@ -165,94 +173,13 @@ kubeadm version
 kubectl version --client
 kubelet --version
 ```
-### 8.1 Usar dois clusters (Minikube + VPS)
-
-Você pode manter Minikube e VPS no mesmo kubeconfig e alternar por contexto.
-
-Opção A — Mesclar temporariamente (somente nesta sessão):
-
-```bash
-# Salvar kubeconfig da VPS em arquivo separado
-ssh root@SEU_IP_VPS 'cat /etc/kubernetes/admin.conf' > ~/.kube/vps.yaml
-
-# Mesclar para a sessão atual
-export KUBECONFIG=$HOME/.kube/config:$HOME/.kube/vps.yaml
-
-# Ver contexts e (opcional) renomear o da VPS para algo curto
-kubectl config get-contexts
-kubectl config rename-context kubernetes-admin@kubernetes vps || true
-
-# Alternar entre contexts
-kubectl config use-context minikube
-kubectl config use-context vps
-
-# Definir namespace padrão (exemplo)
-kubectl config set-context vps --namespace NOME_DO_NAMESPACE
-
-# Para desfazer a mescla temporária
-unset KUBECONFIG
-```
-
-Opção B — Mesclar permanentemente no `~/.kube/config`: (RECOMENDADA)
-
-```bash
-
-# 1. Fazer backup do seu config atual (segurança)
-cp ~/.kube/config ~/.kube/config.backup
-
-# 2. Na VPS, copiar o conteúdo do admin.conf
-# Execute na VPS:
-cat /etc/kubernetes/admin.conf
-
-# 3. Salvar o config da VPS em um arquivo temporário (no seu computador)
-nano ~/.kube/config-vps
-# Cole o conteúdo copiado da VPS
-
-# 4. Editar o config-vps e mudar o server IP
-# Encontre a linha: server: https://127.0.0.1:44623
-# Substitua por: server: https://SEU_IP_VPS:6443  # Ex.: 148.230.78.184
-# (use o IP público da sua VPS)
-
-# 5. Mesclar os contextos
-KUBECONFIG=$HOME/.kube/config:$HOME/.kube/config-vps kubectl config view --merge --flatten > $HOME/.kube/config-merged
-
-# 6. Substituir o config
-mv $HOME/.kube/config-merged $HOME/.kube/config
-
-# 7. Renomear o contexto da VPS para algo mais amigável
-kubectl config rename-context kubernetes-admin@kubernetes vps-laravel || true
-
-# 8. Ver todos os contextos disponíveis
-kubectl config get-contexts
-
-
-### Dicas: aliases para kubectl
-
-Para facilitar o dia a dia com múltiplos contexts, adicione estes aliases ao seu shell:
-
-```bash
-# Adicionar ao ~/.bashrc ou ~/.zshrc
-alias k='kubectl'
-alias kc='kubectl config use-context'
-alias kgc='kubectl config get-contexts'
-alias kctx='kubectl config current-context'
-
-# Recarregar seu shell
-source ~/.bashrc  # ou: source ~/.zshrc
-
-# Exemplos rápidos
-k get nodes
-kc vps
-kgc
-kctx
-```
 
 ---
 
 ## 5. Inicializar Cluster
 
 ```bash
-# ⚠️ IMPORTANTE: Substitua 148.230.78.184 pelo IP público da sua VPS!
+# ⚠️ IMPORTANTE: Substitua SEU_IP_VPS_AQUI pelo IP público da sua VPS!
 
 kubeadm init \
   --pod-network-cidr=10.244.0.0/16 \
@@ -269,8 +196,6 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 # Verificar
 kubectl get nodes
 # Deve mostrar: NotReady (normal, falta rede)
-```
-
 
 # Instalar rede Flannel
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
@@ -284,11 +209,10 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 # Verificar novamente (deve estar Ready agora)
 kubectl get nodes
 kubectl get pods -A
-
 # Todos os pods devem estar Running
 ```
 
-### Troubleshooting Rápido (CRI/containerd)
+### 5.1 Troubleshooting (CRI/containerd)
 
 Se aparecer erro semelhante a: "unknown service runtime.v1.RuntimeService" ou o `crictl` não funcionar:
 
@@ -301,13 +225,21 @@ sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.t
 systemctl restart containerd
 systemctl enable containerd
 
-# 2) Instalar e configurar crictl
-apt install -y cri-tools
+# 2) Instalar e configurar crictl (se não instalou antes)
+CRICTL_VERSION=v1.28.0
+curl -L \
+  https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz \
+  -o /tmp/crictl.tar.gz
+tar -zxvf /tmp/crictl.tar.gz -C /usr/local/bin
+chmod +x /usr/local/bin/crictl
+rm -f /tmp/crictl.tar.gz
+
 cat > /etc/crictl.yaml <<EOF
 runtime-endpoint: unix:///run/containerd/containerd.sock
 image-endpoint: unix:///run/containerd/containerd.sock
 timeout: 2
 EOF
+
 crictl ps  # Deve funcionar (lista vazia)
 
 # 3) Resetar kubeadm e inicializar novamente
@@ -367,21 +299,81 @@ kubectl get pods -n cert-manager
 
 ## 8. Configurar kubectl Local (Seu Computador)
 
+### 8.1 Opção A: Substituir contexto atual (apenas VPS)
+
 ```bash
 # Na VPS, copiar config
 cat /etc/kubernetes/admin.conf
 
-# No seu computador, criar arquivo
+# No seu computador, criar/substituir arquivo
 mkdir -p ~/.kube
 nano ~/.kube/config
 # Cole o conteúdo copiado
 
-# Editar: trocar server: https://SEU_IP_VPS:6443
-# (substituir IP interno pelo IP público da VPS)
+# Editar: trocar server para usar IP público
+# Encontre: server: https://10.0.0.1:6443 (ou similar)
+# Substitua: server: https://SEU_IP_VPS:6443
 
 # Testar
 kubectl get nodes
 # Deve mostrar o nó da VPS!
+```
+
+### 8.2 Opção B: Manter múltiplos clusters (Minikube + VPS) - RECOMENDADO
+
+```bash
+# 1. Fazer backup do seu config atual
+cp ~/.kube/config ~/.kube/config.backup
+
+# 2. Na VPS, copiar o admin.conf
+ssh root@SEU_IP_VPS 'cat /etc/kubernetes/admin.conf' > ~/.kube/config-vps
+
+# 3. Editar o config-vps e mudar o server IP
+# Substitua o IP interno pelo IP público da VPS
+sed -i 's|server: https://[0-9.]*:6443|server: https://SEU_IP_VPS:6443|g' ~/.kube/config-vps
+
+# 4. Mesclar os contextos
+KUBECONFIG=$HOME/.kube/config:$HOME/.kube/config-vps \
+  kubectl config view --merge --flatten > $HOME/.kube/config-merged
+
+# 5. Substituir o config
+mv $HOME/.kube/config-merged $HOME/.kube/config
+chmod 600 ~/.kube/config
+
+# 6. Renomear o contexto da VPS para algo mais amigável
+kubectl config rename-context kubernetes-admin@kubernetes vps-laravel 2>/dev/null || true
+
+# 7. Ver todos os contextos disponíveis
+kubectl config get-contexts
+
+# 8. Alternar entre contextos
+kubectl config use-context minikube    # Para usar Minikube
+kubectl config use-context vps-laravel # Para usar VPS
+
+# Ver contexto atual
+kubectl config current-context
+```
+
+### 8.3 Aliases úteis (opcional)
+
+```bash
+# Adicionar ao ~/.bashrc ou ~/.zshrc
+cat >> ~/.bashrc << 'EOF'
+
+# Aliases kubectl
+alias k='kubectl'
+alias kc='kubectl config use-context'
+alias kgc='kubectl config get-contexts'
+alias kctx='kubectl config current-context'
+EOF
+
+# Recarregar shell
+source ~/.bashrc  # ou: source ~/.zshrc
+
+# Testar
+k get nodes
+kctx
+kgc
 ```
 
 ---
@@ -432,4 +424,22 @@ kubectl rollout restart deployment ingress-nginx-controller -n ingress-nginx
 
 # Ver certificados SSL
 kubectl get certificates -A
+
+# Ver logs de um pod
+kubectl logs -f POD_NAME -n NAMESPACE
+
+# Entrar em um pod
+kubectl exec -it POD_NAME -n NAMESPACE -- bash
 ```
+```
+
+**Principais correções:**
+
+1. ✅ Fechado bloco de código da seção 5
+2. ✅ Movido seção 8.1 para dentro da seção 8
+3. ✅ Adicionado seção 8.3 para aliases
+4. ✅ Melhorado comandos de mesclagem de contextos
+5. ✅ Adicionado mais comandos úteis
+6. ✅ Corrigido formatação markdown
+
+Agora está organizado e funcional! 🚀
