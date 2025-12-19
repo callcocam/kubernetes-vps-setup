@@ -273,36 +273,31 @@ echo -e "${GREEN}  RECURSOS (CPU/MEMÓRIA)${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
 if [[ "$SETUP_PROD" == true ]]; then
-    echo -e "${YELLOW}💡 Escolha um perfil de recursos ou configure manualmente:${NC}\n"
+    echo -e "${YELLOW}💡 Escolha um perfil de recursos PARA PRODUÇÃO:${NC}\n"
 
     echo -e "${CYAN}1)${NC} 🚀 ${GREEN}Produção VPS${NC} - Alta disponibilidade"
     echo -e "   └─ 2 réplicas | RAM: 512Mi-1Gi | CPU: 500m-1000m"
     echo -e "   └─ Recomendado para apps em produção com tráfego real\n"
 
-    echo -e "${CYAN}2)${NC} 💻 ${YELLOW}Local (Minikube)${NC} - Recursos mínimos"
-    echo -e "   └─ 1 réplica | RAM: 128Mi-256Mi | CPU: 100m-250m"
-    echo -e "   └─ Otimizado para Kubernetes local (Minikube, Kind, k3d)\n"
-
-    echo -e "${CYAN}3)${NC} 🛠️  ${YELLOW}Desenvolvimento${NC} - Recursos moderados"
+    echo -e "${CYAN}2)${NC} 🛠️  ${YELLOW}Desenvolvimento${NC} - Recursos moderados"
     echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
     echo -e "   └─ Para ambiente de desenvolvimento/staging\n"
 
-    echo -e "${CYAN}4)${NC} 🧪 ${BLUE}Test${NC} - Recursos moderados"
+    echo -e "${CYAN}3)${NC} 🧪 ${BLUE}Test${NC} - Recursos moderados"
     echo -e "   └─ 1 réplica | RAM: 256Mi-512Mi | CPU: 250m-500m"
     echo -e "   └─ Para testes automatizados e homologação\n"
 
-    echo -e "${CYAN}5)${NC} ⚙️  ${PURPLE}Manual${NC} - Configuração customizada"
+    echo -e "${CYAN}4)${NC} ⚙️  ${PURPLE}Manual${NC} - Configuração customizada"
     echo -e "   └─ Você define todos os valores\n"
 
-    read -p "$(echo -e ${BLUE}Escolha uma opção [1-5]:${NC} )" RESOURCE_PROFILE
+    read -p "$(echo -e ${BLUE}Escolha uma opção [1-4]:${NC} )" RESOURCE_PROFILE
 else
-    # Para desenvolvimento local apenas, usar perfil Local (Minikube)
-    RESOURCE_PROFILE=2
-    echo -e "${CYAN}💡 Configuração DESENVOLVIMENTO LOCAL: Perfil Local (Minikube)${NC}"
+    # Para desenvolvimento local apenas, não perguntar - usar perfil Minikube
+    RESOURCE_PROFILE="local"
+    echo -e "${CYAN}💡 AMBIENTE LOCAL: Recursos configurados automaticamente${NC}"
     echo -e "${YELLOW}   1 réplica | RAM: 128Mi-256Mi | CPU: 100m-250m${NC}\n"
-    echo -e "${YELLOW}⚠️  Para alterar, edite manualmente os arquivos após geração:${NC}"
-    echo -e "${YELLOW}   - .dev/kubernetes/deployment.yaml${NC}"
-    echo -e "${YELLOW}   - kubernetes/deployment.yaml (se gerar depois)${NC}\n"
+    echo -e "${YELLOW}⚠️  Para alterar recursos, edite após a geração:${NC}"
+    echo -e "${YELLOW}   - .dev/kubernetes/deployment.yaml${NC}\n"
 fi
 
 case $RESOURCE_PROFILE in
@@ -315,15 +310,6 @@ case $RESOURCE_PROFILE in
         REPLICAS="2"
         ;;
     2)
-        echo -e "\n${YELLOW}✅ Perfil LOCAL (Minikube) selecionado${NC}\n"
-        MEM_REQUEST="128Mi"
-        MEM_LIMIT="256Mi"
-        CPU_REQUEST="100m"
-        CPU_LIMIT="250m"
-        REPLICAS="1"
-        echo -e "${CYAN}💡 Otimizado para Kubernetes local com recursos limitados${NC}"
-        ;;
-    3)
         echo -e "\n${YELLOW}✅ Perfil DESENVOLVIMENTO selecionado${NC}\n"
         MEM_REQUEST="256Mi"
         MEM_LIMIT="512Mi"
@@ -331,7 +317,7 @@ case $RESOURCE_PROFILE in
         CPU_LIMIT="500m"
         REPLICAS="1"
         ;;
-    4)
+    3)
         echo -e "\n${BLUE}✅ Perfil TEST selecionado${NC}\n"
         MEM_REQUEST="256Mi"
         MEM_LIMIT="512Mi"
@@ -339,13 +325,21 @@ case $RESOURCE_PROFILE in
         CPU_LIMIT="500m"
         REPLICAS="1"
         ;;
-    5|*)
+    4|*)
         echo -e "\n${PURPLE}⚙️  Configuração MANUAL${NC}\n"
         read_input "💾 Memória mínima (ex: 256Mi, 512Mi):" "512Mi" MEM_REQUEST
         read_input "💾 Memória máxima (ex: 512Mi, 1Gi):" "1Gi" MEM_LIMIT
         read_input "⚡ CPU mínima (ex: 250m, 500m):" "500m" CPU_REQUEST
         read_input "⚡ CPU máxima (ex: 500m, 1000m):" "1000m" CPU_LIMIT
         read_input "📊 Número de réplicas:" "2" REPLICAS
+        ;;
+    "local")
+        # Perfil para ambiente local apenas
+        MEM_REQUEST="128Mi"
+        MEM_LIMIT="256Mi"
+        CPU_REQUEST="100m"
+        CPU_LIMIT="250m"
+        REPLICAS="1"
         ;;
 esac
 
