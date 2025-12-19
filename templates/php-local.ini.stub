@@ -12,8 +12,9 @@ opcache.enable = 0
 opcache.enable_cli = 0
 
 [xdebug]
-xdebug.mode = debug
-xdebug.start_with_request = yes
-xdebug.client_host = host.docker.internal
-xdebug.client_port = 9003
-xdebug.log = /tmp/xdebug.log
+; Xdebug desabilitado por padrão (descomente as linhas abaixo para habilitar)
+; xdebug.mode = debug
+; xdebug.start_with_request = yes
+; xdebug.client_host = host.docker.internal
+; xdebug.client_port = 9003
+; xdebug.log = /tmp/xdebug.log

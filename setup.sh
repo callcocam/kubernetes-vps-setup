@@ -420,9 +420,36 @@ cp .env.local ../.env
 echo "🐳 Subindo containers..."
 docker compose up -d
 
-# 3. Aguardar containers ficarem prontos
-echo "⏳ Aguardando containers ficarem prontos..."
-sleep 8
+# 3. Aguardar PostgreSQL estar realmente pronto
+echo "⏳ Aguardando PostgreSQL aceitar conexões..."
+until docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; do
+  echo "   Aguardando PostgreSQL..."
+  sleep 2
+done
+echo "✅ PostgreSQL aceitando conexões!"
+
+# 3.1. Aguardar PostgreSQL estar totalmente inicializado (criar DB e usuário)
+echo "⏳ Aguardando inicialização completa do banco..."
+sleep 5
+
+# 3.2. Testar conexão com credenciais do Laravel
+echo "⏳ Testando conexão com banco de dados..."
+MAX_ATTEMPTS=10
+ATTEMPT=0
+until docker compose exec -T app php artisan db:show > /dev/null 2>&1; do
+  ATTEMPT=$((ATTEMPT + 1))
+  if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+    echo "❌ Erro: Não foi possível conectar ao banco após $MAX_ATTEMPTS tentativas"
+    echo "   Verificando logs do PostgreSQL..."
+    docker compose logs postgres | tail -20
+    echo ""
+    echo "   Verifique as credenciais no .env e docker-compose.yml"
+    exit 1
+  fi
+  echo "   Tentativa $ATTEMPT/$MAX_ATTEMPTS - Aguardando conexão..."
+  sleep 3
+done
+echo "✅ Conexão com banco de dados estabelecida!"
 
 # 4. Ajustar permissões
 echo "🔐 Ajustando permissões..."
