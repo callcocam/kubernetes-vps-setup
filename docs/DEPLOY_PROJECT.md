@@ -240,13 +240,81 @@ https://{{DOMAIN}}
 
 ---
 
-# 💻 DEPLOY EM MINIKUBE (LOCAL)
+# 💻 DEPLOY LOCAL
 
-> ⏱️ **Tempo**: ~15 minutos por projeto
+Você tem **duas opções independentes** para testar localmente (escolha UMA):
+
+1. **Docker Compose** → Mais simples, sem Kubernetes (apenas containers Docker)
+2. **Minikube** → Ambiente idêntico à produção (cluster Kubernetes local)
+
+**💡 As opções são alternativas, não sequenciais!** Você pode pular a Opção A e ir direto para a Opção B.
+
+---
+
+## Opção A: Docker Compose (Simples e Rápido)
+
+> ⏱️ **Tempo**: ~5 minutos
+> 
+> **Pré-requisito**: Docker instalado
+
+### 1. Acessar diretório .dev
+
+```bash
+# No projeto Laravel (fora de kubernetes-vps-setup)
+cd ..
+cd .dev
+```
+
+### 2. Inicializar ambiente
+
+```bash
+# Executar script de inicialização
+./init.sh
+```
+
+**O que o init.sh faz:**
+- ✅ Cria volumes Docker (PostgreSQL e Redis)
+- ✅ Sobe containers (app, postgres, redis, nginx)
+- ✅ Instala dependências Composer
+- ✅ Gera APP_KEY
+- ✅ Executa migrations
+- ✅ Configura permissões
+
+### 3. Acessar aplicação
+
+```bash
+# Aplicação estará disponível em:
+http://localhost:8080
+```
+
+### 4. Comandos Úteis (Docker Compose)
+
+```bash
+# Ver logs
+docker-compose logs -f app
+
+# Acessar container
+docker-compose exec app bash
+
+# Executar migrations
+docker-compose exec app php artisan migrate
+
+# Parar ambiente
+docker-compose down
+
+# Parar e remover volumes (apaga dados)
+docker-compose down -v
+```
+
+---
+
+## Opção B: Minikube (Ambiente Kubernetes)
+
+> ⏱️ **Tempo**: ~15 minutos
 > 
 > **Pré-requisito**: Minikube configurado com [SETUP_MINIKUBE.md](SETUP_MINIKUBE.md)
 
-## 4. Build da Imagem Docker
+### 4. Build da Imagem Docker
 
 ```bash
 # No diretório do projeto (fora de kubernetes-vps-setup)
