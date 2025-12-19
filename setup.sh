@@ -413,6 +413,23 @@ set -e
 echo "🚀 Inicializando ambiente de desenvolvimento..."
 echo ""
 
+# Verificar se há volumes Docker antigos que podem ter senhas diferentes
+if docker volume ls | grep -q "postgres"; then
+    echo "⚠️  ATENÇÃO: Detectados volumes Docker existentes!"
+    echo "   Se este projeto foi reconfigurado com novas senhas, você precisa limpar os volumes antigos."
+    echo ""
+    read -p "   Deseja REMOVER volumes existentes e começar do zero? [s/N]: " -n 1 -r REMOVE_VOLUMES
+    echo ""
+    if [[ $REMOVE_VOLUMES =~ ^[Ss]$ ]]; then
+        echo "🗑️  Removendo volumes antigos..."
+        docker compose down -v
+    else
+        echo "⚠️  Mantendo volumes existentes. Se houver erro de autenticação, rode:"
+        echo "   docker compose down -v && ./init.sh"
+        echo ""
+    fi
+fi
+
 # 1. Copiar .env
 echo "📝 Copiando .env..."
 cp .env.local ../.env
@@ -441,10 +458,13 @@ until docker compose exec -T app php artisan db:show > /dev/null 2>&1; do
   ATTEMPT=$((ATTEMPT + 1))
   if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
     echo "❌ Erro: Não foi possível conectar ao banco após $MAX_ATTEMPTS tentativas"
+    echo ""
     echo "   Verificando logs do PostgreSQL..."
     docker compose logs postgres | tail -20
     echo ""
-    echo "   Verifique as credenciais no .env e docker-compose.yml"
+    echo "   ${RED}SOLUÇÃO:${NC} Provavelmente há volumes antigos com senha diferente."
+    echo "   Execute: ${GREEN}docker compose down -v && ./init.sh${NC}"
+    echo ""
     exit 1
   fi
   echo "   Tentativa $ATTEMPT/$MAX_ATTEMPTS - Aguardando conexão..."
