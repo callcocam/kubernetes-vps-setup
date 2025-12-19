@@ -273,56 +273,65 @@ minikube image ls | grep meu-app
 
 ## 6. Ajustar Deployment para Minikube
 
-> ⚠️ **IMPORTANTE**: O `deployment.yaml` usa `ghcr.io/` (produção). Para Minikube, remover este prefixo:
+> ✅ **PRONTO**: O `setup.sh` já gerou os arquivos corretos em `.dev/kubernetes/` (sem ghcr.io/)!
+
+**Use os arquivos `.dev/kubernetes/` para Minikube** - eles já têm as imagens locais configuradas:
 
 ```bash
-# Editar deployment.yaml para usar imagem local
-sed -i 's|ghcr.io/seu-usuario/meu-app|seu-usuario/meu-app|g' kubernetes/deployment.yaml
+# Conferir que as imagens estão corretas (SEM ghcr.io/)
+grep "image:" .dev/kubernetes/deployment.yaml | head -1
+# Deve mostrar: image: seu-usuario/meu-app:latest
 
-# Também no migration-job.yaml
-sed -i 's|ghcr.io/seu-usuario/meu-app|seu-usuario/meu-app|g' kubernetes/migration-job.yaml
-
-# Verificar
-grep "image:" kubernetes/deployment.yaml | head -1
-# Deve mostrar: image: seu-usuario/meu-app:latest (sem ghcr.io/)
+grep "image:" .dev/kubernetes/migration-job.yaml | head -1
+# Deve mostrar: image: seu-usuario/meu-app:latest
 ```
 
-**Por quê?**
-- **Produção (VPS)**: Puxa de `ghcr.io/user/repo` (GitHub Container Registry)
-- **Minikube**: Usa imagem local `user/repo` (carregada com `minikube image load`)
+**Por quê dois diretórios?**
+- **`kubernetes/`** → Produção (com `ghcr.io/`) - **VAI PRO GIT** ✅
+- **`.dev/kubernetes/`** → Minikube (sem `ghcr.io/`) - **NÃO VAI PRO GIT** ❌
+
+Assim você pode testar localmente sem risco de quebrar produção!
 
 ---
 
-## 7. Aplicar Configurações
+## 7. Aplicar Configurações (Minikube)
+
+**⚠️ IMPORTANTE**: Use os arquivos de `.dev/kubernetes/` para Minikube!
 
 ```bash
-# Aplicar namespace primeiro
-kubectl apply -f kubernetes/namespace.yaml
-kubectl apply -f kubernetes/secrets.yaml
-kubectl apply -f kubernetes/configmap.yaml
+# Aplicar namespace, secrets, configmap
+kubectl apply -f .dev/kubernetes/namespace.yaml
+kubectl apply -f .dev/kubernetes/secrets.yaml
+kubectl apply -f .dev/kubernetes/configmap.yaml
 
 # Aplicar PostgreSQL e Redis
-kubectl apply -f kubernetes/postgres.yaml
-kubectl apply -f kubernetes/redis.yaml
+kubectl apply -f .dev/kubernetes/postgres.yaml
+kubectl apply -f .dev/kubernetes/redis.yaml
 
-# Aguardar banco estar pronto
-sleep 10
+# Aguardar databases ficarem Ready
+kubectl wait --for=condition=ready pod -l app=postgres -n meu-app --timeout=120s
+kubectl wait --for=condition=ready pod -l app=redis -n meu-app --timeout=120s
 
 # Aplicar aplicação e serviços
-kubectl apply -f kubernetes/deployment.yaml
-kubectl apply -f kubernetes/service.yaml
-kubectl apply -f kubernetes/ingress.yaml
+kubectl apply -f .dev/kubernetes/deployment.yaml
+kubectl apply -f .dev/kubernetes/service.yaml
+kubectl apply -f .dev/kubernetes/ingress.yaml
 
 # NÃO aplicar cert-issuer.yaml (só para produção com SSL)
 ```
+
+**Por quê .dev/kubernetes/?**
+- `.dev/kubernetes/` → Imagens locais (ex: `callcocam/meu-app:latest`)
+- `kubernetes/` → Imagens GHCR (ex: `ghcr.io/callcocam/meu-app:latest`)
+- O diretório `.dev/` não vai pro Git, garantindo que você pode testar localmente **sem quebrar produção**!
 
 ---
 
 ## 8. Executar Migrations (Minikube)
 
 ```bash
-# Aplicar migration-job
-kubectl apply -f kubernetes/migration-job.yaml
+# Aplicar migration-job (usar .dev/kubernetes/)
+kubectl apply -f .dev/kubernetes/migration-job.yaml
 
 # Acompanhar logs
 kubectl logs -f job/migration -n meu-app

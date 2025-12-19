@@ -39,8 +39,9 @@ git push origin main
 | Documento | Quando usar |
 |-----------|-------------|
 | [QUICK_START.md](docs/QUICK_START.md) | Deploy em 30 minutos |
-| [DEPLOY_VPS.md](docs/DEPLOY_VPS.md) | Guia completo passo a passo |
-| [DEPLOY_LOCAL_K8S.md](docs/DEPLOY_LOCAL_K8S.md) | Desenvolvimento com Minikube |
+| [SETUP_VPS.md](docs/SETUP_VPS.md) | Configurar VPS (uma vez) |
+| [SETUP_MINIKUBE.md](docs/SETUP_MINIKUBE.md) | Configurar Minikube (uma vez) |
+| [DEPLOY_PROJECT.md](docs/DEPLOY_PROJECT.md) | Fazer deploy de projetos Laravel |
 | [MULTIPLE_APPS.md](docs/MULTIPLE_APPS.md) | Várias apps na mesma VPS |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Resolver problemas |
 | [GITHUB_REGISTRY_SECRETS.md](docs/GITHUB_REGISTRY_SECRETS.md) | GitHub Container Registry |
@@ -53,11 +54,16 @@ git push origin main
 
 **`setup.sh`** gera automaticamente:
 - ✅ Ambiente dev local (Docker Compose + init.sh)
-- ✅ Configurações Kubernetes (10 arquivos YAML)
+- ✅ **Dois conjuntos** de manifests Kubernetes:
+  - `kubernetes/` → Produção (com `ghcr.io/`) - vai pro Git
+  - `.dev/kubernetes/` → Minikube (sem `ghcr.io/`) - não vai pro Git
 - ✅ CI/CD (GitHub Actions)
 - ✅ SSL automático (Let's Encrypt)
 - ✅ PostgreSQL + Redis
 - ✅ Documentação personalizada
+
+**Por quê dois diretórios?**  
+Para você poder testar localmente (Minikube) **sem risco de quebrar produção** (VPS)! 🎉
 
 **`setup-github-secrets.sh`** configura:
 - ✅ APP_KEY (Laravel)

@@ -345,6 +345,7 @@ mkdir -p "$GITHUB_DIR"
 process_template() {
     local template_file="$1"
     local output_file="$2"
+    local use_ghcr="${3:-true}"  # Por padrão usa ghcr.io (produção)
     
     cp "$template_file" "$output_file"
     
@@ -378,6 +379,11 @@ process_template() {
     sed -i "s|{{DB_DATABASE}}|${DB_NAME}|g" "$output_file"
     sed -i "s|{{DB_USERNAME}}|${DB_USER}|g" "$output_file"
     sed -i "s|{{APP_NAME}}|${PROJECT_NAME}|g" "$output_file"
+    
+    # Para ambiente local (Minikube), remover ghcr.io/ das imagens
+    if [[ "$use_ghcr" == "false" ]]; then
+        sed -i 's|ghcr.io/||g' "$output_file"
+    fi
     
     echo -e "${GREEN}✅${NC} $(basename "$output_file")"
 }
@@ -552,7 +558,7 @@ echo -e "\n${CYAN}════════════════════�
 echo -e "${CYAN}  🚀 PRODUÇÃO (Kubernetes + GitHub Actions)${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}\n"
 
-# Processar templates Kubernetes
+# Processar templates Kubernetes PARA PRODUÇÃO (com ghcr.io)
 process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$OUTPUT_DIR/namespace.yaml"
 process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$OUTPUT_DIR/secrets.yaml"
 process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$OUTPUT_DIR/configmap.yaml"
@@ -562,9 +568,30 @@ process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$OUTPUT_DIR/deplo
 process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$OUTPUT_DIR/service.yaml"
 process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$OUTPUT_DIR/ingress.yaml"
 process_template "$SCRIPT_DIR/templates/cert-issuer.yaml.stub" "$OUTPUT_DIR/cert-issuer.yaml"
-    process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
+process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$OUTPUT_DIR/migration-job.yaml"
 
-    echo -e "\n${YELLOW}⏳ Gerando arquivos Docker (Produção)...${NC}"
+# Gerar arquivos Kubernetes PARA LOCAL (sem ghcr.io) em .dev/kubernetes/
+echo -e "\n${YELLOW}⏳ Gerando arquivos Kubernetes para ambiente local (.dev/kubernetes/)...${NC}"
+DEV_K8S_DIR="$DEV_DIR/kubernetes"
+mkdir -p "$DEV_K8S_DIR"
+
+process_template "$SCRIPT_DIR/templates/namespace.yaml.stub" "$DEV_K8S_DIR/namespace.yaml" "false"
+process_template "$SCRIPT_DIR/templates/secrets.yaml.stub" "$DEV_K8S_DIR/secrets.yaml" "false"
+process_template "$SCRIPT_DIR/templates/configmap.yaml.stub" "$DEV_K8S_DIR/configmap.yaml" "false"
+process_template "$SCRIPT_DIR/templates/postgres.yaml.stub" "$DEV_K8S_DIR/postgres.yaml" "false"
+process_template "$SCRIPT_DIR/templates/redis.yaml.stub" "$DEV_K8S_DIR/redis.yaml" "false"
+process_template "$SCRIPT_DIR/templates/deployment.yaml.stub" "$DEV_K8S_DIR/deployment.yaml" "false"
+process_template "$SCRIPT_DIR/templates/service.yaml.stub" "$DEV_K8S_DIR/service.yaml" "false"
+process_template "$SCRIPT_DIR/templates/ingress.yaml.stub" "$DEV_K8S_DIR/ingress.yaml" "false"
+process_template "$SCRIPT_DIR/templates/migration-job.yaml.stub" "$DEV_K8S_DIR/migration-job.yaml" "false"
+
+# Copiar README explicativo para .dev/kubernetes/
+cp "$SCRIPT_DIR/templates/dev-kubernetes-README.md" "$DEV_K8S_DIR/README.md"
+
+echo -e "${GREEN}✅ Arquivos Kubernetes local gerados (sem ghcr.io/)${NC}"
+echo -e "${CYAN}📄 Veja .dev/kubernetes/README.md para detalhes${NC}"
+
+echo -e "\n${YELLOW}⏳ Gerando arquivos Docker (Produção)...${NC}"
 
     # Processar templates Docker
     process_template "$SCRIPT_DIR/Dockerfile.stub" "$PROJECT_ROOT/Dockerfile"
