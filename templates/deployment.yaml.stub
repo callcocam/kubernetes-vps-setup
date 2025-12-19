@@ -81,8 +81,8 @@ spec:
       #       port: 8080
       #     initialDelaySeconds: 15
       #     periodSeconds: 10
-        readinessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
+      #   readinessProbe:
+      #     tcpSocket:
+      #       port: 8080
+      #     initialDelaySeconds: 5
+      #     periodSeconds: 5
