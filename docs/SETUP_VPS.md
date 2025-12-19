@@ -193,7 +193,7 @@ kubectl config set-context vps --namespace NOME_DO_NAMESPACE
 unset KUBECONFIG
 ```
 
-Opção B — Mesclar permanentemente no `~/.kube/config`:
+Opção B — Mesclar permanentemente no `~/.kube/config`: (RECOMENDADA)
 
 ```bash
 
