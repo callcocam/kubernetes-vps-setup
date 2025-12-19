@@ -905,6 +905,7 @@ if [[ -d "$SCRIPT_DIR/docs" ]]; then
         "TROUBLESHOOTING.md"          # Solução de problemas
         "FILE_STRUCTURE.md"           # Estrutura de arquivos
         "GITHUB_REGISTRY_SECRETS.md"  # Configuração de secrets
+        "CLEANUP.md"                  # Limpeza e remoção
         "INDEX.md"                    # Índice de navegação
     )
     
