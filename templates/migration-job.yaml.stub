@@ -8,6 +8,9 @@ spec:
     spec:
       containers:
       - name: migration
+        # PRODUÇÃO: ghcr.io/{{GITHUB_REPO}}:latest (GitHub Container Registry)
+        # MINIKUBE LOCAL: {{GITHUB_REPO}}:latest (imagem local sem ghcr.io/)
+        # Para Minikube, remova "ghcr.io/" da linha abaixo antes de aplicar
         image: ghcr.io/{{GITHUB_REPO}}:latest
         imagePullPolicy: IfNotPresent
         command: ["php", "artisan", "migrate", "--force"]

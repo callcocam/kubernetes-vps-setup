@@ -19,6 +19,9 @@ spec:
       containers:
       # Container principal do Laravel
       - name: app
+        # PRODUÇÃO: ghcr.io/{{GITHUB_REPO}}:latest (GitHub Container Registry)
+        # MINIKUBE LOCAL: {{GITHUB_REPO}}:latest (imagem local sem ghcr.io/)
+        # Para Minikube, remova "ghcr.io/" da linha abaixo antes de aplicar
         image: ghcr.io/{{GITHUB_REPO}}:latest
         imagePullPolicy: IfNotPresent  # Usa imagem local se existir (dev) ou pull (prod)
         ports:

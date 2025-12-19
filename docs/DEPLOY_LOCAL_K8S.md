@@ -447,23 +447,48 @@ minikube image load {{GITHUB_REPO}}:latest
 minikube image ls | grep {{GITHUB_REPO_NAME}}
 ```
 
-### 7.3 Aplicar Configurações no Kubernetes
+### 7.3 Ajustar Deployment para Minikube
+
+> ⚠️ **IMPORTANTE**: O `deployment.yaml` gerado é configurado para **produção** (GitHub Container Registry).
+> Para Minikube local, precisa remover o prefixo `ghcr.io/` da imagem:
+
+```bash
+# Editar deployment.yaml para usar imagem local (sem ghcr.io/)
+sed -i 's|ghcr.io/{{GITHUB_REPO}}|{{GITHUB_REPO}}|g' kubernetes/deployment.yaml
+
+# Também no migration-job.yaml
+sed -i 's|ghcr.io/{{GITHUB_REPO}}|{{GITHUB_REPO}}|g' kubernetes/migration-job.yaml
+
+# Verificar alteração
+grep "image:" kubernetes/deployment.yaml | head -1
+# Deve mostrar: image: {{GITHUB_REPO}}:latest (sem ghcr.io/)
+```
+
+**Por quê?**
+- **Produção**: Puxa imagem do GitHub Container Registry (`ghcr.io/user/repo`)
+- **Minikube**: Usa imagem local carregada com `minikube image load` (só `user/repo`)
+
+### 7.4 Aplicar Configurações no Kubernetes
 
 > ⚠️ **Importante**: Para ambiente **local**, NÃO aplique `cert-issuer.yaml` (é apenas para produção com Let's Encrypt)
 
 ```bash
-# Aplicar arquivos EXCETO cert-issuer.yaml (não precisa de SSL local)
+# Aplicar namespace primeiro
 kubectl apply -f kubernetes/namespace.yaml
 kubectl apply -f kubernetes/secrets.yaml
 kubectl apply -f kubernetes/configmap.yaml
-kubectl apply -f kubernetes/deployment.yaml
+
+# Aplicar PostgreSQL e Redis (stateful)
 kubectl apply -f kubernetes/postgres.yaml
 kubectl apply -f kubernetes/redis.yaml
+
+# Aguardar banco estar pronto
+sleep 10
+
+# Aplicar aplicação e serviços
+kubectl apply -f kubernetes/deployment.yaml
 kubectl apply -f kubernetes/service.yaml
 kubectl apply -f kubernetes/ingress.yaml
-
-# Aguardar recursos serem criados
-sleep 5
 ```
 
 **Por que pular cert-issuer.yaml?**
@@ -471,7 +496,21 @@ sleep 5
 - SSL/Let's Encrypt é apenas para produção (VPS com domínio real)
 - Localmente usamos HTTP (ou mkcert para HTTPS - veja seção 3 de Próximos Passos)
 
-### 7.4 Verificar e Aguardar Pods Ficarem Prontos
+### 7.5 Executar Migrations
+
+```bash
+# Aplicar job de migration
+kubectl apply -f kubernetes/migration-job.yaml
+
+# Acompanhar execução
+kubectl logs -f job/migration -n {{NAMESPACE}}
+
+# Deve ver:
+# ✅ Creating migration table ... DONE
+# ✅ Running migrations ... DONE
+```
+
+### 7.6 Verificar e Aguardar Pods Ficarem Prontos
 
 ```bash
 # Ver status dos pods
