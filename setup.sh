@@ -758,13 +758,14 @@ if [[ -d "$SCRIPT_DIR/docs" ]]; then
     # Lista de documentos essenciais
     ESSENTIAL_DOCS=(
         "QUICK_START.md"              # Guia rápido de 30 minutos
-        "DEPLOY_VPS.md"               # Deploy simplificado
-        "DEPLOY_LOCAL_K8S.md"         # Deploy Kubernetes local (Minikube)
-        "DEV_LOCAL.md"                # Desenvolvimento local
+        "SETUP_VPS.md"                # Setup da VPS (uma vez)
+        "SETUP_MINIKUBE.md"           # Setup do Minikube (uma vez)
+        "DEPLOY_PROJECT.md"           # Deploy de projetos (VPS ou Minikube)
         "MULTIPLE_APPS.md"            # Múltiplas apps no mesmo VPS
         "TROUBLESHOOTING.md"          # Solução de problemas
         "FILE_STRUCTURE.md"           # Estrutura de arquivos
         "GITHUB_REGISTRY_SECRETS.md"  # Configuração de secrets
+        "INDEX.md"                    # Índice de navegação
     )
     
     # Copiar e processar cada documento essencial

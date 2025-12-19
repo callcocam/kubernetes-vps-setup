@@ -21,62 +21,79 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
    - O que cada arquivo faz
    - Exemplos de customização
 
-4. **[🔄 MULTIPLE_APPS.md](MULTIPLE_APPS.md)** - **Múltiplos Apps na Mesma VPS**
+### 🛠️ Configuração de Infraestrutura (Uma Vez)
+
+4. **[🖥️ SETUP_VPS.md](SETUP_VPS.md)** - **Preparar VPS para Produção**
+   - Configuração única da VPS
+   - Docker + Kubernetes + Ingress + cert-manager
+   - ~40 minutos
+   - Reutilize para múltiplos projetos
+
+5. **[💻 SETUP_MINIKUBE.md](SETUP_MINIKUBE.md)** - **Preparar Minikube Local**
+   - Configuração única do ambiente local
+   - Kubernetes para desenvolvimento
+   - ~20 minutos
+   - Reutilize para múltiplos projetos
+
+### 🚀 Deploy de Projetos (Para Cada App)
+
+6. **[📦 DEPLOY_PROJECT.md](DEPLOY_PROJECT.md)** - **Deploy de Projetos Laravel**
+   - Um guia para VPS (produção) e Minikube (local)
+   - Usar após configurar infraestrutura
+   - ~15-20 minutos por projeto
+   - Reutilizável para novos projetos
+
+7. **[🔄 MULTIPLE_APPS.md](MULTIPLE_APPS.md)** - **Múltiplos Apps na Mesma VPS**
    - Como rodar vários apps Laravel na mesma VPS
    - Cada app com domínio e SSL próprio
    - Exemplos práticos completos
    - Gerenciamento de recursos
 
-### 📘 Documentação Completa
+8. **[🔑 GITHUB_REGISTRY_SECRETS.md](GITHUB_REGISTRY_SECRETS.md)** - **Configurar GitHub Registry**
+   - Personal Access Token (PAT)
+   - ImagePullSecret para Kubernetes
+   - Configuração de CI/CD
 
-5. **[📚 DEPLOY_VPS.md](DEPLOY_VPS.md)** - **Guia Completo (Simplificado)**
-   - **PARTE 1**: Configuração da VPS (faça uma vez)
-   - **PARTE 2**: Deploy de projetos Laravel (para cada projeto)
-   - Focado em comandos e uso do `setup.sh`
-   - Conceitos-chave explicados
+### 🔧 Configurações e Troubleshooting
 
-6. **[🔬 DEPLOY_VPS_ADVANCED.md](DEPLOY_VPS_ADVANCED.md)** - **Referência Técnica**
-   - Todos os YAMLs completos com explicações
-   - Detalhes técnicos de cada configuração
-   - Para quem quer entender a fundo
-   - Troubleshooting detalhado
-
-7. **[🎯 RESOURCE_ALLOCATION.md](RESOURCE_ALLOCATION.md)** - **Alocação de Recursos**
+9. **[🎯 RESOURCE_ALLOCATION.md](RESOURCE_ALLOCATION.md)** - **Alocação de Recursos**
    - Configuração específica para VPS 4 vCPUs / 16GB RAM
    - Distribuição para Produção, Dev e Test
    - Monitoramento e otimização
    - Troubleshooting de recursos
 
-8. **[🔧 TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - **Problemas Comuns**
+10. **[🔧 TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - **Problemas Comuns**
    - Bugs conhecidos e soluções
    - Mixed Content, ImagePullBackOff, SSL, etc.
    - Comandos de debug e emergência
    - Checklist de validação
 
-9. **[🔒 LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - **Configurar HTTPS**
+11. **[🔒 LARAVEL_HTTPS_SETUP.md](LARAVEL_HTTPS_SETUP.md)** - **Configurar HTTPS**
    - TrustProxies para Kubernetes
    - Forçar HTTPS em produção
    - Resolver Mixed Content
    - Configuração pós-deploy
 
-10. **[💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
+### 📊 Recursos e Exemplos
+
+12. **[💼 EXAMPLES.md](EXAMPLES.md)** - **Exemplos de Casos de Uso**
    - Cenários reais de uso
    - Configurações específicas
    - Casos de uso avançados
 
-11. **[🎯 EXEMPLO_SELECAO_PERFIS.md](EXEMPLO_SELECAO_PERFIS.md)** - **NOVO! Menu Interativo**
+13. **[🎯 EXEMPLO_SELECAO_PERFIS.md](EXEMPLO_SELECAO_PERFIS.md)** - **Menu Interativo**
    - Exemplos práticos do novo menu de perfis
    - Fluxo completo de configuração
    - Casos de uso para modo Manual
    - FAQ sobre seleção de recursos
 
-12. **[📊 COMPARACAO_PERFIS.md](COMPARACAO_PERFIS.md)** - **NOVO! Comparação Visual**
+14. **[📊 COMPARACAO_PERFIS.md](COMPARACAO_PERFIS.md)** - **Comparação Visual**
    - Comparação lado a lado dos 4 perfis
    - Gráficos de uso de recursos
    - Guia de decisão (qual perfil escolher)
    - Request vs Limit explicado visualmente
 
-13. **[🔴 REVERB_SETUP.md](REVERB_SETUP.md)** - **NOVO! Laravel Reverb (WebSockets)**
+15. **[🔴 REVERB_SETUP.md](REVERB_SETUP.md)** - **Laravel Reverb (WebSockets)**
    - Configuração automática em todos os ambientes
    - Broadcasting em tempo real (chat, notificações)
    - Exemplos práticos de uso
@@ -87,26 +104,29 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 ### 🆕 Primeira Vez com Kubernetes?
 
 ```
-1. Leia: QUICK_START.md
-2. Configure VPS: DEPLOY_VPS.md (Parte 1)
-3. Execute: ./setup.sh
-4. Siga: QUICK_START.md (passos 2-7)
+1. Leia: QUICK_START.md (visão geral rápida)
+2. Configure infraestrutura:
+   - Produção: SETUP_VPS.md
+   - Local: SETUP_MINIKUBE.md
+3. Execute: ./setup.sh (no projeto Laravel)
+4. Siga: DEPLOY_PROJECT.md
 ```
 
-### 🚀 Já tem VPS Configurada?
+### 🚀 Já tem Infraestrutura Configurada?
 
 ```
-1. Execute: ./setup.sh
-2. Siga: QUICK_START.md
+1. Entre no projeto Laravel
+2. Execute: ./setup.sh
+3. Siga: DEPLOY_PROJECT.md
 ```
 
-### 🔧 Quer Entender os Detalhes?
+### 🔧 Quer Entender a Estrutura?
 
 ```
-1. Leia: DEPLOY_VPS.md (simplificado)
-2. Aprofunde: DEPLOY_VPS_ADVANCED.md (YAMLs completos)
-3. Explore: FILE_STRUCTURE.md
-4. Customize: templates/*.stub
+1. Leia: FILE_STRUCTURE.md
+2. Explore: templates/*.stub
+3. Customize conforme necessário
+4. Execute: ./setup.sh
 ```
 
 ### 📊 Quer Customizar Templates?
@@ -130,13 +150,13 @@ Bem-vindo ao setup completo de Kubernetes para projetos Laravel! 🚀
 ## 🛠️ Arquivos Principais
 
 | Arquivo | Propósito | Quando Usar |
-|---------|-----------|-------------|
-| `setup.sh` | 🚀 Configurador automático | Gerar arquivos para novo projeto |
-| `QUICK_START.md` | ⚡ Guia rápido | Primeiro deploy (30 min) |
-| `RESOURCE_ALLOCATION.md` | 🎯 Alocação de recursos | Otimizar uso da VPS |
+|--SETUP_VPS.md` | 🖥️ Configurar VPS | Uma vez por VPS (produção) |
+| `SETUP_MINIKUBE.md` | 💻 Configurar Minikube | Uma vez no PC (dev local) |
+| `DEPLOY_PROJECT.md` | 📦 Deploy de apps | Para cada projeto Laravel |
 | `MULTIPLE_APPS.md` | 🔄 Múltiplos apps | Rodar vários apps na mesma VPS |
-| `README.md` | 📖 Visão geral | Entender o projeto |
-| `DEPLOY_VPS.md` | 📚 Guia simplificado | Comandos e fluxo principal |
+| `TROUBLESHOOTING.md` | 🔧 Resolver problemas | Quando algo der errado |
+| `FILE_STRUCTURE.md` | 📁 Estrutura | Entender arquivos gerados |
+| `README.md` | 📖 Visão geral | Entender o projetoincipal |
 | `DEPLOY_VPS_ADVANCED.md` | 🔬 Referência técnica | YAMLs completos e detalhes |
 | `FILE_STRUCTURE.md` | 📁 Estrutura | Entender arquivos gerados |
 | `EXAMPLES.md` | 💼 Casos de uso | Cenários reais e avançados |

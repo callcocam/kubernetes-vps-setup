@@ -1,0 +1,564 @@
+# 🚀 Deploy de Projetos Laravel com Kubernetes
+
+> 📘 **Guia Unificado** - Deploy para **VPS (produção)** ou **Minikube (local)**
+> 
+> - 🖥️ **VPS não configurada?** → [SETUP_VPS.md](SETUP_VPS.md)
+> - 💻 **Minikube não configurado?** → [SETUP_MINIKUBE.md](SETUP_MINIKUBE.md)
+> - 🚀 **Quer velocidade?** → [QUICK_START.md](QUICK_START.md)
+
+---
+
+## 📋 O que você vai fazer
+
+1. Preparar projeto Laravel
+2. Executar `setup.sh` (gera configs automaticamente)
+3. **VPS**: Configurar GitHub Actions + DNS + SSL
+4. **Minikube**: Build local + ajustar deployment
+5. Fazer deploy
+6. Executar migrations
+
+---
+
+## 1. Preparar Projeto Laravel
+
+### Opção A: Projeto Existente
+
+```bash
+cd /caminho/para/seu-projeto-laravel
+```
+
+### Opção B: Criar Novo (com Docker - sem instalar PHP)
+
+```bash
+# Criar projeto usando Docker
+docker run --rm -v $(pwd):/app composer create-project laravel/laravel meu-projeto
+cd meu-projeto
+```
+
+### Opção C: Criar Novo (com Composer instalado)
+
+```bash
+composer create-project laravel/laravel meu-projeto
+cd meu-projeto
+```
+
+---
+
+## 2. Clonar Repositório de Setup
+
+```bash
+# Dentro do diretório do projeto Laravel
+git clone https://github.com/SEU_USUARIO/kubernetes-vps-setup.git
+cd kubernetes-vps-setup
+```
+
+---
+
+## 3. Executar Setup
+
+```bash
+./setup.sh
+```
+
+### Perguntas do Setup
+
+```bash
+📦 Nome do projeto: meu-app
+🏢 Namespace: meu-app
+🌐 Domínio: meuapp.com  # VPS: domínio real | Minikube: meuapp.test
+
+🖥️  IP da VPS: 
+  - VPS: SEU_IP_PUBLICO
+  - Minikube: 127.0.0.1
+
+🐙 Usuário GitHub: seu-usuario
+📦 Nome do repositório: meu-app  # SEM usuário/org, apenas nome!
+
+🔑 APP_KEY: [ENTER - gera automático]
+📧 Email: admin@meuapp.com
+🗄️  Banco: laravel
+👤 Usuário: laravel
+🔐 Senhas: [ENTER - gera automático]
+☁️  Spaces: n
+
+🔴 Reverb: [ENTER em todos - gera automático]
+
+⭐ Perfil de Recursos:
+  VPS Produção: 1) 🚀 Produção (2 réplicas, 512MB RAM)
+  Minikube: 2) 💻 Local (1 réplica, 128MB RAM)
+```
+
+**Arquivos gerados:**
+```
+seu-projeto/
+├── kubernetes/          # Manifests K8s
+├── docker/             # Configs Docker
+├── .github/workflows/  # CI/CD
+├── Dockerfile          # Build produção
+├── .dev/              # Dev local (Docker Compose)
+└── docs/              # Documentação
+```
+
+---
+
+# 🖥️ DEPLOY EM VPS (PRODUÇÃO)
+
+> ⏱️ **Tempo**: ~20 minutos por projeto
+> 
+> **Pré-requisito**: VPS configurada com [SETUP_VPS.md](SETUP_VPS.md)
+
+## 4. Configurar GitHub Container Registry
+
+### 4.1 Criar Personal Access Token
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. "Generate new token (classic)"
+3. Nome: `ghcr-token`
+4. Scopes: ✅ `write:packages`, ✅ `read:packages`, ✅ `delete:packages`
+5. Generate → **Copiar token**
+
+### 4.2 Configurar Secrets no GitHub
+
+```bash
+# No projeto Laravel (fora de kubernetes-vps-setup)
+cd ..
+
+# Instalar GitHub CLI (se não tiver)
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
+    sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] \
+    https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list
+sudo apt update && sudo apt install gh
+
+# Autenticar
+gh auth login
+
+# Adicionar secrets
+gh secret set GHCR_TOKEN
+# Cole o token do GHCR
+
+gh secret set KUBE_CONFIG
+# Cole o conteúdo de ~/.kube/config
+```
+
+**Ou via interface web:**
+- Repositório → Settings → Secrets and variables → Actions
+- New repository secret:
+  - `GHCR_TOKEN`: seu token GHCR
+  - `KUBE_CONFIG`: conteúdo de `~/.kube/config`
+
+---
+
+## 5. Configurar DNS
+
+**No seu provedor de DNS (Cloudflare, GoDaddy, etc):**
+
+```
+Tipo    Nome    Valor
+A       @       SEU_IP_VPS
+A       *       SEU_IP_VPS
+```
+
+**Testar:**
+```bash
+# Aguardar 1-5 minutos para propagar
+nslookup meuapp.com
+ping meuapp.com
+```
+
+---
+
+## 6. Criar Diretórios de Dados na VPS
+
+```bash
+# Na VPS
+ssh root@SEU_IP_VPS
+
+# Criar diretórios para este projeto
+mkdir -p /data/postgresql/meu-app
+mkdir -p /data/redis/meu-app
+
+# Ajustar permissões
+chmod 700 /data/postgresql/meu-app
+chmod 755 /data/redis/meu-app
+
+exit
+```
+
+---
+
+## 7. Fazer Deploy (GitHub Actions)
+
+```bash
+# Adicionar arquivos
+git add .
+git commit -m "Initial Kubernetes setup"
+git push origin main
+
+# GitHub Actions vai:
+# - Build da imagem Docker
+# - Push para ghcr.io
+# - Deploy no Kubernetes
+```
+
+**Acompanhar deploy:**
+- GitHub → Actions → Ver workflow rodando
+
+---
+
+## 8. Executar Migrations (VPS)
+
+```bash
+# Aguardar pods ficarem prontos
+kubectl get pods -n meu-app
+
+# Via migration-job (recomendado)
+kubectl apply -f kubernetes/migration-job.yaml
+
+# Ou manualmente
+kubectl exec -it -n meu-app deployment/app -- php artisan migrate --force
+```
+
+---
+
+## 9. Verificar SSL (VPS)
+
+```bash
+# Ver certificado (pode levar 2-5 minutos)
+kubectl get certificate -n meu-app
+kubectl describe certificate -n meu-app app-tls
+
+# Status "Ready: True" = SSL funcionando!
+```
+
+**Acessar aplicação:**
+```
+https://meuapp.com
+```
+
+---
+
+# 💻 DEPLOY EM MINIKUBE (LOCAL)
+
+> ⏱️ **Tempo**: ~15 minutos por projeto
+> 
+> **Pré-requisito**: Minikube configurado com [SETUP_MINIKUBE.md](SETUP_MINIKUBE.md)
+
+## 4. Build da Imagem Docker
+
+```bash
+# No diretório do projeto (fora de kubernetes-vps-setup)
+cd ..
+
+# Build usando Dockerfile gerado
+docker build -t seu-usuario/meu-app:latest .
+
+# Verificar imagem
+docker images | grep meu-app
+```
+
+---
+
+## 5. Carregar Imagem no Minikube
+
+```bash
+# Carregar imagem no cluster Minikube
+minikube image load seu-usuario/meu-app:latest
+
+# Verificar
+minikube image ls | grep meu-app
+```
+
+---
+
+## 6. Ajustar Deployment para Minikube
+
+> ⚠️ **IMPORTANTE**: O `deployment.yaml` usa `ghcr.io/` (produção). Para Minikube, remover este prefixo:
+
+```bash
+# Editar deployment.yaml para usar imagem local
+sed -i 's|ghcr.io/seu-usuario/meu-app|seu-usuario/meu-app|g' kubernetes/deployment.yaml
+
+# Também no migration-job.yaml
+sed -i 's|ghcr.io/seu-usuario/meu-app|seu-usuario/meu-app|g' kubernetes/migration-job.yaml
+
+# Verificar
+grep "image:" kubernetes/deployment.yaml | head -1
+# Deve mostrar: image: seu-usuario/meu-app:latest (sem ghcr.io/)
+```
+
+**Por quê?**
+- **Produção (VPS)**: Puxa de `ghcr.io/user/repo` (GitHub Container Registry)
+- **Minikube**: Usa imagem local `user/repo` (carregada com `minikube image load`)
+
+---
+
+## 7. Aplicar Configurações
+
+```bash
+# Aplicar namespace primeiro
+kubectl apply -f kubernetes/namespace.yaml
+kubectl apply -f kubernetes/secrets.yaml
+kubectl apply -f kubernetes/configmap.yaml
+
+# Aplicar PostgreSQL e Redis
+kubectl apply -f kubernetes/postgres.yaml
+kubectl apply -f kubernetes/redis.yaml
+
+# Aguardar banco estar pronto
+sleep 10
+
+# Aplicar aplicação e serviços
+kubectl apply -f kubernetes/deployment.yaml
+kubectl apply -f kubernetes/service.yaml
+kubectl apply -f kubernetes/ingress.yaml
+
+# NÃO aplicar cert-issuer.yaml (só para produção com SSL)
+```
+
+---
+
+## 8. Executar Migrations (Minikube)
+
+```bash
+# Aplicar migration-job
+kubectl apply -f kubernetes/migration-job.yaml
+
+# Acompanhar logs
+kubectl logs -f job/migration -n meu-app
+```
+
+---
+
+## 9. Configurar Acesso Local
+
+### 9.1 Editar /etc/hosts
+
+```bash
+# Editar arquivo
+sudo nano /etc/hosts
+
+# Adicionar linha
+127.0.0.1 meuapp.test
+
+# Salvar: Ctrl+O, Enter, Ctrl+X
+```
+
+### 9.2 Iniciar Minikube Tunnel
+
+```bash
+# Em um terminal separado, deixar rodando
+minikube tunnel
+```
+
+### 9.3 Acessar no Navegador
+
+```bash
+# Abrir navegador em:
+http://meuapp.test
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### VPS: Pods não iniciam (ImagePullBackOff)
+
+```bash
+# Verificar logs
+kubectl describe pod -n meu-app -l app=laravel-app
+
+# Recriar secret para GHCR
+kubectl delete secret ghcr-secret -n meu-app
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=SEU_USUARIO \
+  --docker-password=SEU_TOKEN_GHCR \
+  -n meu-app
+
+# Reiniciar
+kubectl rollout restart deployment/app -n meu-app
+```
+
+### VPS: SSL não emite
+
+```bash
+# Ver logs do cert-manager
+kubectl logs -n cert-manager -l app=cert-manager
+
+# Ver certificado
+kubectl describe certificate -n meu-app app-tls
+
+# Deletar e recriar
+kubectl delete certificate app-tls -n meu-app
+kubectl apply -f kubernetes/ingress.yaml
+```
+
+### Minikube: Imagem não encontrada
+
+```bash
+# Verificar se existe localmente
+docker images | grep meu-app
+
+# Rebuild
+docker build -t seu-usuario/meu-app:latest .
+
+# Recarregar no Minikube
+minikube image load seu-usuario/meu-app:latest
+
+# Reiniciar pod
+kubectl delete pod -n meu-app -l app=laravel-app
+```
+
+### Minikube: Ingress não responde
+
+```bash
+# Verificar Ingress Controller
+kubectl get pods -n ingress-nginx
+
+# Verificar tunnel está ativo
+minikube tunnel
+
+# Verificar /etc/hosts
+cat /etc/hosts | grep meuapp.test
+```
+
+### CrashLoopBackOff (VPS ou Minikube)
+
+```bash
+# Ver logs
+kubectl logs -n meu-app -l app=laravel-app --previous
+
+# Causas comuns:
+# - APP_KEY não configurada
+# - Banco não acessível
+# - Erro no código
+
+# Acessar container
+kubectl exec -it -n meu-app deployment/app -- bash
+php artisan config:cache
+php artisan migrate --force
+exit
+```
+
+---
+
+## 📊 Comandos Úteis
+
+```bash
+# Ver tudo no namespace
+kubectl get all -n meu-app
+
+# Ver recursos (CPU/RAM)
+kubectl top pods -n meu-app
+kubectl top nodes
+
+# Ver logs em tempo real
+kubectl logs -f -n meu-app deployment/app
+
+# Escalar aplicação
+kubectl scale deployment app -n meu-app --replicas=3
+
+# Reiniciar pods
+kubectl rollout restart deployment/app -n meu-app
+
+# Executar comandos Artisan
+kubectl exec -it -n meu-app deployment/app -- php artisan tinker
+
+# Acessar PostgreSQL
+kubectl exec -it -n meu-app statefulset/postgres -- psql -U laravel -d laravel
+
+# Deletar projeto completo
+kubectl delete namespace meu-app
+```
+
+---
+
+## 🔄 Atualizar Projeto Existente
+
+### VPS (Automático - GitHub Actions)
+
+```bash
+# Fazer mudanças no código
+git add .
+git commit -m "Nova feature"
+git push origin main
+
+# GitHub Actions faz deploy automático!
+```
+
+### Minikube (Manual)
+
+```bash
+# 1. Rebuild da imagem
+docker build -t seu-usuario/meu-app:latest .
+
+# 2. Recarregar no Minikube
+minikube image load seu-usuario/meu-app:latest
+
+# 3. Reiniciar pods
+kubectl delete pod -n meu-app -l app=laravel-app
+
+# 4. Aguardar
+kubectl get pods -n meu-app -w
+```
+
+---
+
+## 🧹 Limpeza
+
+### Deletar Um Projeto
+
+```bash
+# Deletar namespace completo (remove TUDO)
+kubectl delete namespace meu-app
+```
+
+### Minikube: Deletar Múltiplos Projetos
+
+```bash
+# Deletar vários namespaces
+kubectl delete namespace projeto1 projeto2 projeto3
+
+# Ver o que sobrou
+kubectl get namespaces
+```
+
+---
+
+## ✅ Checklist
+
+**Ambos (VPS e Minikube):**
+- [ ] Infraestrutura configurada (VPS ou Minikube)
+- [ ] Projeto Laravel preparado
+- [ ] `setup.sh` executado
+- [ ] Arquivos gerados em `kubernetes/`
+
+**Apenas VPS:**
+- [ ] GitHub Container Registry configurado
+- [ ] Secrets do GitHub (GHCR_TOKEN, KUBE_CONFIG)
+- [ ] DNS apontando para VPS
+- [ ] Push para GitHub feito
+- [ ] Diretórios `/data/postgresql/APP` e `/data/redis/APP` criados na VPS
+- [ ] SSL emitido
+
+**Apenas Minikube:**
+- [ ] Imagem Docker construída
+- [ ] Imagem carregada no Minikube
+- [ ] `deployment.yaml` e `migration-job.yaml` ajustados (sem `ghcr.io/`)
+- [ ] `/etc/hosts` configurado
+- [ ] `minikube tunnel` rodando
+
+**Ambos:**
+- [ ] Pods rodando (`kubectl get pods -n NAMESPACE`)
+- [ ] Migrations executadas
+- [ ] Aplicação acessível
+
+---
+
+**🎉 Pronto!** Seu projeto Laravel está rodando em Kubernetes!
+
+**Próximos passos:**
+- Deploy de mais projetos: Repetir este guia com novo namespace/domínio
+- Múltiplas apps: Ver [MULTIPLE_APPS.md](MULTIPLE_APPS.md)
+- Troubleshooting: Ver [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
