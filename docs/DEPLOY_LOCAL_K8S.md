@@ -429,10 +429,10 @@ Continue com os passos abaixo para usar Minikube.
 cd ..  # (sair de kubernetes-vps-setup ou .dev)
 
 # Build usando Dockerfile gerado
-docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # Verificar imagem
-docker images | grep {{GITHUB_REPO}}
+docker images | grep {{GITHUB_REPO_NAME}}
 ```
 
 > 💡 **O build já instala Laravel Reverb automaticamente!**
@@ -444,10 +444,10 @@ docker images | grep {{GITHUB_REPO}}
 
 ```bash
 # Carregar imagem no cluster Minikube
-minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # Verificar
-minikube image ls | grep {{GITHUB_REPO}}
+minikube image ls | grep {{GITHUB_REPO_NAME}}
 ```
 
 ### 7.3 Aplicar Configurações no Kubernetes
@@ -694,10 +694,10 @@ kubectl exec -it -n {{NAMESPACE}} statefulset/postgres -- \
 # 1. Fazer mudanças no código
 
 # 2. Rebuild da imagem
-docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # 3. Para Minikube, recarregar imagem
-minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # 4. Deletar pod atual (Kubernetes recriará com nova imagem)
 kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
@@ -742,13 +742,13 @@ kubectl port-forward -n {{NAMESPACE}} statefulset/postgres 5432:5432
 
 ```bash
 # Verificar se a imagem existe localmente
-docker images | grep {{GITHUB_REPO}}
+docker images | grep {{GITHUB_REPO_NAME}}
 
 # Rebuild da imagem
-docker build -t {{GITHUB_USER}}/{{GITHUB_REPO}}:latest .
+docker build -t {{GITHUB_REPO}}:latest .
 
 # Carregar imagem no Minikube
-minikube image load {{GITHUB_USER}}/{{GITHUB_REPO}}:latest
+minikube image load {{GITHUB_REPO}}:latest
 
 # Deletar pod para forçar recriação
 kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
