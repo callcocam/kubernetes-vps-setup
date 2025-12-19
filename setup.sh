@@ -597,7 +597,7 @@ echo -e "${GREEN}  ✅ ARQUIVOS GERADOS COM SUCESSO!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}\n"
 
 echo -e "${CYAN}📂 Arquivos de Desenvolvimento Local:${NC}"
-echo -e "  ${GREEN}.dev/docker-compose.yml${NC} - Orquestração dos containers"
+echo -e "  ${GREEN}.dev/docker-compose.yml${NC} - Orquestração dos containers (use: docker compose)"
 echo -e "  ${GREEN}.dev/Dockerfile.dev${NC} - Build para desenvolvimento"
 echo -e "  ${GREEN}.dev/.env.local${NC} - Variáveis de ambiente"
 echo -e "  ${GREEN}.dev/docker/${NC} - Configurações Nginx, Supervisor e PHP"

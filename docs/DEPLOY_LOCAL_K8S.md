@@ -370,13 +370,13 @@ cd .dev
 ./init.sh
 
 # OU manualmente:
-docker-compose up -d
+docker compose up -d
 
 # Verificar se containers estão rodando
-docker-compose ps
+docker compose ps
 
 # Ver logs (caso haja erro)
-docker-compose logs -f
+docker compose logs -f
 
 # Acessar aplicação
 # http://localhost:8000
@@ -400,7 +400,7 @@ docker-compose logs -f
 docker ps
 
 # 2. Ver logs completos
-docker-compose logs
+docker compose logs
 
 # 3. Verificar porta 8000
 sudo lsof -i :8000
@@ -408,8 +408,8 @@ sudo lsof -i :8000
 sudo netstat -tulpn | grep 8000
 
 # 4. Parar e reiniciar
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # 5. Se não funcionar, use a Opção B (Minikube) - são independentes!
 ```
