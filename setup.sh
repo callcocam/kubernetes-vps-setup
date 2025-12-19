@@ -296,9 +296,13 @@ if [[ "$SETUP_PROD" == true ]]; then
 
     read -p "$(echo -e ${BLUE}Escolha uma opção [1-5]:${NC} )" RESOURCE_PROFILE
 else
-    # Para desenvolvimento local apenas, usar perfil mínimo
+    # Para desenvolvimento local apenas, usar perfil Local (Minikube)
     RESOURCE_PROFILE=2
-    echo -e "${CYAN}💡 Configuração para desenvolvimento local: perfil mínimo${NC}\n"
+    echo -e "${CYAN}💡 Configuração DESENVOLVIMENTO LOCAL: Perfil Local (Minikube)${NC}"
+    echo -e "${YELLOW}   1 réplica | RAM: 128Mi-256Mi | CPU: 100m-250m${NC}\n"
+    echo -e "${YELLOW}⚠️  Para alterar, edite manualmente os arquivos após geração:${NC}"
+    echo -e "${YELLOW}   - .dev/kubernetes/deployment.yaml${NC}"
+    echo -e "${YELLOW}   - kubernetes/deployment.yaml (se gerar depois)${NC}\n"
 fi
 
 case $RESOURCE_PROFILE in
@@ -345,7 +349,29 @@ case $RESOURCE_PROFILE in
         ;;
 esac
 
-echo -e "${CYAN}Recursos configurados:${NC}"
+# Configurar recursos para ambiente LOCAL (quando ambos)
+if [[ "$SETUP_LOCAL" == true && "$SETUP_PROD" == true ]]; then
+    # Quando escolhe "Ambos", os arquivos .dev/ sempre usam perfil Local (Minikube)
+    LOCAL_MEM_REQUEST="128Mi"
+    LOCAL_MEM_LIMIT="256Mi"
+    LOCAL_CPU_REQUEST="100m"
+    LOCAL_CPU_LIMIT="250m"
+    LOCAL_REPLICAS="1"
+    
+    echo -e "${CYAN}💡 Arquivos .dev/ usarão Perfil Local (Minikube):${NC}"
+    echo -e "   RAM: ${GREEN}${LOCAL_MEM_REQUEST} → ${LOCAL_MEM_LIMIT}${NC}"
+    echo -e "   CPU: ${GREEN}${LOCAL_CPU_REQUEST} → ${LOCAL_CPU_LIMIT}${NC}"
+    echo -e "   Réplicas: ${GREEN}${LOCAL_REPLICAS}${NC}\n"
+else
+    # Quando escolhe só Local ou só Produção, usar os mesmos valores
+    LOCAL_MEM_REQUEST="$MEM_REQUEST"
+    LOCAL_MEM_LIMIT="$MEM_LIMIT"
+    LOCAL_CPU_REQUEST="$CPU_REQUEST"
+    LOCAL_CPU_LIMIT="$CPU_LIMIT"
+    LOCAL_REPLICAS="$REPLICAS"
+fi
+
+echo -e "${CYAN}Recursos PRODUÇÃO configurados:${NC}"
 echo -e "  RAM: ${GREEN}${MEM_REQUEST} → ${MEM_LIMIT}${NC}"
 echo -e "  CPU: ${GREEN}${CPU_REQUEST} → ${CPU_LIMIT}${NC}"
 echo -e "  Réplicas: ${GREEN}${REPLICAS}${NC}\n"
@@ -412,10 +438,20 @@ process_template() {
     # Decidir quais valores usar baseado no ambiente
     local domain_value="$DOMAIN"
     local ip_value="$VPS_IP"
+    local mem_request="$MEM_REQUEST"
+    local mem_limit="$MEM_LIMIT"
+    local cpu_request="$CPU_REQUEST"
+    local cpu_limit="$CPU_LIMIT"
+    local replicas="$REPLICAS"
     
     if [[ "$is_local" == "true" ]]; then
         domain_value="$LOCAL_DOMAIN"
         ip_value="$LOCAL_IP"
+        mem_request="$LOCAL_MEM_REQUEST"
+        mem_limit="$LOCAL_MEM_LIMIT"
+        cpu_request="$LOCAL_CPU_REQUEST"
+        cpu_limit="$LOCAL_CPU_LIMIT"
+        replicas="$LOCAL_REPLICAS"
     fi
     
     # Substituições
@@ -440,8 +476,11 @@ process_template() {
     sed -i "s|{{DO_SPACES_REGION}}|${DO_SPACES_REGION}|g" "$output_file"
     sed -i "s|{{DO_SPACES_BUCKET}}|${DO_SPACES_BUCKET}|g" "$output_file"
     sed -i "s|{{DO_SPACES_ENDPOINT}}|${DO_SPACES_ENDPOINT}|g" "$output_file"
-    sed -i "s|{{MEM_REQUEST}}|${MEM_REQUEST}|g" "$output_file"
-    sed -i "s|{{MEM_LIMIT}}|${MEM_LIMIT}|g" "$output_file"
+    sed -i "s|{{MEM_REQUEST}}|${mem_request}|g" "$output_file"
+    sed -i "s|{{MEM_LIMIT}}|${mem_limit}|g" "$output_file"
+    sed -i "s|{{CPU_REQUEST}}|${cpu_request}|g" "$output_file"
+    sed -i "s|{{CPU_LIMIT}}|${cpu_limit}|g" "$output_file"
+    sed -i "s|{{REPLICAS}}|${replicas}|g" "$output_file"
     sed -i "s|{{CPU_REQUEST}}|${CPU_REQUEST}|g" "$output_file"
     sed -i "s|{{CPU_LIMIT}}|${CPU_LIMIT}|g" "$output_file"
     sed -i "s|{{REPLICAS}}|${REPLICAS}|g" "$output_file"
