@@ -291,20 +291,68 @@ http://localhost:8080
 
 ```bash
 # Ver logs
-docker-compose logs -f app
+docker compose logs -f app
 
 # Acessar container
-docker-compose exec app bash
+docker compose exec app bash
 
 # Executar migrations
-docker-compose exec app php artisan migrate
+docker compose exec app php artisan migrate
 
 # Parar ambiente
-docker-compose down
+docker compose down
 
 # Parar e remover volumes (apaga dados)
-docker-compose down -v
+docker compose down -v
 ```
+
+### 5. Desenvolvimento com Hot Reload
+
+**✅ Código já está mapeado!** O docker compose.yml gerado já inclui mapeamento de volumes:
+
+```yaml
+volumes:
+  - ../:/var/www/html  # Código sincronizado automaticamente
+```
+
+**Alterações não aparecem? Possíveis causas:**
+
+**1. Cache do Laravel**
+```bash
+# Limpar todos os caches
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan cache:clear
+docker compose exec app php artisan view:clear
+docker compose exec app php artisan route:clear
+```
+
+**2. Cache do navegador**
+- Pressione `Ctrl+Shift+R` (Linux/Windows) ou `Cmd+Shift+R` (Mac)
+- Ou abra em aba anônima
+
+**3. Alterações em .env**
+```bash
+# Se alterou .env, reinicie os containers
+docker compose restart app
+```
+
+**4. Alterações em composer.json**
+```bash
+# Se adicionou pacotes
+docker compose exec app composer install
+docker compose restart app
+```
+
+**5. Alterações em migrations/seeders**
+```bash
+# Executar migrations
+docker compose exec app php artisan migrate
+
+# Executar seeders
+docker compose exec app php artisan db:seed
+```
+
+**💡 Após alterações PHP/Blade**: Apenas salve o arquivo e recarregue o navegador (F5)!
 
 ---
 
@@ -314,7 +362,7 @@ docker-compose down -v
 > 
 > **Pré-requisito**: Minikube configurado com [SETUP_MINIKUBE.md](SETUP_MINIKUBE.md)
 
-### 4. Build da Imagem Docker
+### 1. Build da Imagem Docker
 
 ```bash
 # No diretório do projeto (fora de kubernetes-vps-setup)
@@ -329,7 +377,7 @@ docker images | grep {{GITHUB_REPO_NAME}}
 
 ---
 
-## 5. Carregar Imagem no Minikube
+## 2. Carregar Imagem no Minikube
 
 ```bash
 # Carregar imagem no cluster Minikube
@@ -341,7 +389,7 @@ minikube image ls | grep {{GITHUB_REPO_NAME}}
 
 ---
 
-## 6. Ajustar Deployment para Minikube
+## 3. Ajustar Deployment para Minikube
 
 > ✅ **PRONTO**: O `setup.sh` já gerou os arquivos corretos em `.dev/kubernetes/` (sem ghcr.io/)!
 
@@ -364,7 +412,7 @@ Assim você pode testar localmente sem risco de quebrar produção!
 
 ---
 
-## 7. Aplicar Configurações (Minikube)
+## 4. Aplicar Configurações (Minikube)
 
 **⚠️ IMPORTANTE**: Use os arquivos de `.dev/kubernetes/` para Minikube!
 
@@ -397,7 +445,7 @@ kubectl apply -f .dev/kubernetes/ingress.yaml
 
 ---
 
-## 8. Executar Migrations (Minikube)
+## 5. Executar Migrations (Minikube)
 
 ```bash
 # Aplicar migration-job (usar .dev/kubernetes/)
@@ -409,7 +457,7 @@ kubectl logs -f job/migration -n {{NAMESPACE}}
 
 ---
 
-## 9. Configurar Acesso Local
+## 6. Configurar Acesso Local
 
 ### 9.1 Editar /etc/hosts
 
@@ -432,7 +480,7 @@ sudo nano /etc/hosts
 minikube tunnel
 ```
 
-### 9.3 Acessar no Navegador
+### 6.3 Acessar no Navegador
 
 ```bash
 # Abrir navegador em (usar o domínio gerado):
@@ -442,6 +490,31 @@ http://{{PROJECT_NAME}}.test
 **💡 Se escolheu "Ambos" no setup.sh**:
 - Produção (VPS): `https://{{DOMAIN}}`
 - Local (Minikube): `http://{{PROJECT_NAME}}.test`
+
+---
+
+### 7. Desenvolvimento com Alterações de Código
+
+**⚠️ Problema**: Alterações no código não aparecem no Minikube?
+
+**Solução**: Reconstruir e recarregar a imagem
+
+```bash
+# 1. Fazer alterações no código
+# 2. Rebuild da imagem
+docker build -t {{GITHUB_REPO}}:latest .
+
+# 3. Recarregar no Minikube
+minikube image load {{GITHUB_REPO}}:latest
+
+# 4. Forçar atualização dos pods
+kubectl delete pod -n {{NAMESPACE}} -l app=laravel-app
+
+# 5. Aguardar novos pods subirem
+kubectl get pods -n {{NAMESPACE}} -w
+```
+
+**💡 Dica para desenvolvimento ativo**: Se estiver fazendo muitas alterações, considere usar a Opção A (Docker Compose) com volumes mapeados para hot reload instantâneo!
 
 ---
 
