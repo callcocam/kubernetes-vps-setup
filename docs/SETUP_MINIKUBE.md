@@ -189,6 +189,98 @@ Seu ambiente de desenvolvimento Kubernetes está configurado!
 
 ---
 
+## Clusters Múltiplos (Minikube + VPS)
+
+Você pode alternar o `kubectl` entre o cluster local (Minikube) e o cluster da sua VPS usando contexts. Abaixo, duas formas de mesclar kubeconfigs.
+
+Opção A — Mescla TEMPORÁRIA (vale apenas para a sessão atual):
+
+```bash
+# 1) Copiar kubeconfig da VPS para sua máquina local
+ssh root@SEU_IP_VPS 'cat /etc/kubernetes/admin.conf' > ~/.kube/vps.yaml
+
+# 2) Mesclar temporariamente só nesta sessão de terminal
+export KUBECONFIG=$HOME/.kube/config:$HOME/.kube/vps.yaml
+
+# 3) Opcional: renomear o context da VPS para "vps"
+kubectl config get-contexts
+kubectl config rename-context kubernetes-admin@kubernetes vps || true
+
+# 4) Alternar entre contexts
+kubectl config use-context minikube
+kubectl config use-context vps
+
+# 5) Opcional: definir namespace padrão da VPS
+kubectl config set-context vps --namespace NOME_DO_NAMESPACE
+
+# 6) Ver contexto atual
+kubectl config current-context
+
+# 7) Para desfazer a mescla temporária
+unset KUBECONFIG
+```
+
+Opção B — Mescla PERMANENTE no `~/.kube/config`:
+
+```bash
+# 1. Fazer backup do seu config atual (segurança)
+cp ~/.kube/config ~/.kube/config.backup
+
+# 2. Na VPS, copiar o conteúdo do admin.conf
+# Execute na VPS:
+cat /etc/kubernetes/admin.conf
+
+# 3. Salvar o config da VPS em um arquivo temporário (no seu computador)
+nano ~/.kube/config-vps
+# Cole o conteúdo copiado da VPS
+
+# 4. Editar o config-vps e mudar o server IP
+# Encontre a linha: server: https://127.0.0.1:44623
+# Substitua por: server: https://SEU_IP_VPS:6443  # Ex.: 148.230.78.184
+# (use o IP público da sua VPS)
+
+# 5. Mesclar os contextos
+KUBECONFIG=$HOME/.kube/config:$HOME/.kube/config-vps kubectl config view --merge --flatten > $HOME/.kube/config-merged
+
+# 6. Substituir o config
+mv $HOME/.kube/config-merged $HOME/.kube/config
+
+# 7. Renomear o contexto da VPS para algo mais amigável
+kubectl config rename-context kubernetes-admin@kubernetes vps-laravel || true
+
+# 8. Ver todos os contextos disponíveis
+kubectl config get-contexts
+```
+
+Observações:
+- Não compartilhe seus kubeconfigs publicamente.
+- Se algo der errado, restaure o backup criado em `~/.kube/config.backup.*`.
+
+---
+
+### Dicas: aliases para kubectl
+
+Para alternar contexts e consultar rápido, adicione ao seu shell:
+
+```bash
+# Adicionar ao ~/.bashrc ou ~/.zshrc
+alias k='kubectl'
+alias kc='kubectl config use-context'
+alias kgc='kubectl config get-contexts'
+alias kctx='kubectl config current-context'
+
+# Recarregar seu shell
+source ~/.bashrc  # ou: source ~/.zshrc
+
+# Exemplos rápidos
+k get nodes
+kc vps
+kgc
+kctx
+```
+
+---
+
 ## 🔧 Comandos Úteis do Minikube
 
 ```bash

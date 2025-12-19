@@ -165,6 +165,87 @@ kubeadm version
 kubectl version --client
 kubelet --version
 ```
+### 8.1 Usar dois clusters (Minikube + VPS)
+
+Você pode manter Minikube e VPS no mesmo kubeconfig e alternar por contexto.
+
+Opção A — Mesclar temporariamente (somente nesta sessão):
+
+```bash
+# Salvar kubeconfig da VPS em arquivo separado
+ssh root@SEU_IP_VPS 'cat /etc/kubernetes/admin.conf' > ~/.kube/vps.yaml
+
+# Mesclar para a sessão atual
+export KUBECONFIG=$HOME/.kube/config:$HOME/.kube/vps.yaml
+
+# Ver contexts e (opcional) renomear o da VPS para algo curto
+kubectl config get-contexts
+kubectl config rename-context kubernetes-admin@kubernetes vps || true
+
+# Alternar entre contexts
+kubectl config use-context minikube
+kubectl config use-context vps
+
+# Definir namespace padrão (exemplo)
+kubectl config set-context vps --namespace NOME_DO_NAMESPACE
+
+# Para desfazer a mescla temporária
+unset KUBECONFIG
+```
+
+Opção B — Mesclar permanentemente no `~/.kube/config`:
+
+```bash
+
+# 1. Fazer backup do seu config atual (segurança)
+cp ~/.kube/config ~/.kube/config.backup
+
+# 2. Na VPS, copiar o conteúdo do admin.conf
+# Execute na VPS:
+cat /etc/kubernetes/admin.conf
+
+# 3. Salvar o config da VPS em um arquivo temporário (no seu computador)
+nano ~/.kube/config-vps
+# Cole o conteúdo copiado da VPS
+
+# 4. Editar o config-vps e mudar o server IP
+# Encontre a linha: server: https://127.0.0.1:44623
+# Substitua por: server: https://SEU_IP_VPS:6443  # Ex.: 148.230.78.184
+# (use o IP público da sua VPS)
+
+# 5. Mesclar os contextos
+KUBECONFIG=$HOME/.kube/config:$HOME/.kube/config-vps kubectl config view --merge --flatten > $HOME/.kube/config-merged
+
+# 6. Substituir o config
+mv $HOME/.kube/config-merged $HOME/.kube/config
+
+# 7. Renomear o contexto da VPS para algo mais amigável
+kubectl config rename-context kubernetes-admin@kubernetes vps-laravel || true
+
+# 8. Ver todos os contextos disponíveis
+kubectl config get-contexts
+
+
+### Dicas: aliases para kubectl
+
+Para facilitar o dia a dia com múltiplos contexts, adicione estes aliases ao seu shell:
+
+```bash
+# Adicionar ao ~/.bashrc ou ~/.zshrc
+alias k='kubectl'
+alias kc='kubectl config use-context'
+alias kgc='kubectl config get-contexts'
+alias kctx='kubectl config current-context'
+
+# Recarregar seu shell
+source ~/.bashrc  # ou: source ~/.zshrc
+
+# Exemplos rápidos
+k get nodes
+kc vps
+kgc
+kctx
+```
 
 ---
 
@@ -188,6 +269,8 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 # Verificar
 kubectl get nodes
 # Deve mostrar: NotReady (normal, falta rede)
+```
+
 
 # Instalar rede Flannel
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
