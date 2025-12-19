@@ -110,6 +110,29 @@ EOF
 
 sysctl --system
 
+# Configurar containerd ANTES de instalar Kubernetes (IMPORTANTE!)
+systemctl stop containerd
+rm -f /etc/containerd/config.toml
+containerd config default > /etc/containerd/config.toml
+
+# Habilitar systemd cgroup (necessário para Kubernetes)
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+
+# Reiniciar containerd
+systemctl restart containerd
+systemctl enable containerd
+
+# Configurar crictl
+cat > /etc/crictl.yaml <<EOF
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 2
+EOF
+
+# Verificar se containerd está funcionando
+crictl ps
+# Deve retornar lista vazia (sem erros)
+
 # Adicionar repositório Kubernetes
 apt install -y apt-transport-https ca-certificates curl
 mkdir -p /etc/apt/keyrings
@@ -134,39 +157,15 @@ kubelet --version
 
 ## 5. Inicializar Cluster
 
-### Pré-requisitos: Verificar Container Runtime
-
 ```bash
-# Verificar se containerd está rodando
-systemctl status containerd
-
-# Se não estiver rodando, iniciar
-systemctl start containerd
-systemctl enable containerd
-
-# Verificar novamente
-systemctl status containerd
-```
-
-### Inicializar o Cluster
-
-```bash
-# ⚠️ IMPORTANTE: Substitua SEU_IP_VPS pelo IP público real da VPS!
-# Exemplo: se seu IP é 203.0.113.45, use:
-#   kubeadm init \
-#     --pod-network-cidr=10.244.0.0/16 \
-#     --apiserver-advertise-address=203.0.113.45 \
-#     --node-name=k8s-laravel-cluster
+# ⚠️ IMPORTANTE: Substitua 148.230.78.184 pelo IP público da sua VPS!
 
 kubeadm init \
   --pod-network-cidr=10.244.0.0/16 \
-  --apiserver-advertise-address=148.230.78.184 \
+  --apiserver-advertise-address=SEU_IP_VPS_AQUI \
   --node-name=k8s-laravel-cluster
 
-# Se receber aviso sobre hostname não alcançável, é apenas um aviso (pode ignorar)
-# Se receber erro "container runtime is not running":
-#   systemctl restart containerd
-#   Depois repita o kubeadm init acima
+# Aguarde aparecer: "Your Kubernetes control-plane has initialized successfully!"
 
 # Configurar kubectl para root
 mkdir -p $HOME/.kube
@@ -189,6 +188,8 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 # Verificar novamente (deve estar Ready agora)
 kubectl get nodes
 kubectl get pods -A
+
+# Todos os pods devem estar Running
 ```
 
 ---
