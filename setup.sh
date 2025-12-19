@@ -354,6 +354,7 @@ process_template() {
     sed -i "s|{{DOMAIN}}|${DOMAIN}|g" "$output_file"
     sed -i "s|{{VPS_IP}}|${VPS_IP}|g" "$output_file"
     sed -i "s|{{GITHUB_USER}}|${GITHUB_USER}|g" "$output_file"
+    sed -i "s|{{GITHUB_REPO_NAME}}|${GITHUB_REPO_NAME}|g" "$output_file"
     sed -i "s|{{GITHUB_REPO}}|${GITHUB_REPO}|g" "$output_file"
     sed -i "s|{{APP_KEY}}|${APP_KEY}|g" "$output_file"
     sed -i "s|{{APP_EMAIL}}|${APP_EMAIL}|g" "$output_file"
