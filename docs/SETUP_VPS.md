@@ -129,8 +129,18 @@ image-endpoint: unix:///run/containerd/containerd.sock
 timeout: 2
 EOF
 
-# Instalar crictl (se necessário)
-apt install -y cri-tools
+# Instalar crictl
+# Via apt (se disponível)
+apt install -y cri-tools || true
+
+# Fallback: baixar binário (exemplo para amd64)
+CRICTL_VERSION=v1.28.0
+curl -L \
+  https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz \
+  -o /tmp/crictl.tar.gz
+tar -zxvf /tmp/crictl.tar.gz -C /usr/local/bin
+chmod +x /usr/local/bin/crictl
+crictl version
 
 # Verificar se containerd está funcionando
 crictl ps
