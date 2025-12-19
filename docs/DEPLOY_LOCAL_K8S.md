@@ -285,11 +285,8 @@ O script fará perguntas interativas. Para ambiente **local**, use estas configu
 
 🖥️  IP da VPS: 127.0.0.1  # Usar localhost para ambiente local
 
-🐙 Usuário/Organização do GitHub: {{GITHUB_USER}}
-💡 Nome do repositório: apenas o nome, SEM usuário/org!
-   ✅ Correto: meu-app
-   ❌ Errado: seu-usuario/meu-app
-📦 Nome do repositório GitHub: {{GITHUB_REPO_NAME}}  # Exemplo: ideal, siga, siscom-v1
+🐙 Usuário GitHub: {{GITHUB_USER}}
+📦 Nome do repositório: {{GITHUB_REPO}}
 
 🔑 APP_KEY: [deixe vazio - será gerado automaticamente]
 📧 Email do APP: admin@{{DOMAIN}}
@@ -370,13 +367,13 @@ cd .dev
 ./init.sh
 
 # OU manualmente:
-docker compose up -d
+docker-compose up -d
 
 # Verificar se containers estão rodando
-docker compose ps
+docker-compose ps
 
 # Ver logs (caso haja erro)
-docker compose logs -f
+docker-compose logs -f
 
 # Acessar aplicação
 # http://localhost:8000
@@ -400,7 +397,7 @@ docker compose logs -f
 docker ps
 
 # 2. Ver logs completos
-docker compose logs
+docker-compose logs
 
 # 3. Verificar porta 8000
 sudo lsof -i :8000
@@ -408,8 +405,8 @@ sudo lsof -i :8000
 sudo netstat -tulpn | grep 8000
 
 # 4. Parar e reiniciar
-docker compose down
-docker compose up -d
+docker-compose down
+docker-compose up -d
 
 # 5. Se não funcionar, use a Opção B (Minikube) - são independentes!
 ```
@@ -845,64 +842,21 @@ minikube image rm ghcr.io/callcocam/ideal:latest
 minikube image rm callcocam/siga:latest
 ```
 
-### Limpar Imagens e Containers Docker (Host)
-
-```bash
-# Ver todas as imagens Docker no seu host
-docker images | grep -E "(siscom|ideal|siga)"
-
-# Ver containers parados
-docker ps -a --filter "status=exited"
-
-# Remover containers parados específicos
-docker rm $(docker ps -a --filter "name=ideal" -q) 2>/dev/null || true
-docker rm $(docker ps -a --filter "name=siscom" -q) 2>/dev/null || true
-
-# Remover imagens específicas
-docker rmi callcocam/ideal:latest
-docker rmi callcocam/siga:latest
-docker rmi ghcr.io/callcocam/ideal:latest
-
-# Limpeza geral Docker (remove TUDO que não está em uso)
-docker system prune -a --volumes
-
-# Ou limpeza mais agressiva
-docker system prune -a --volumes --force
-```
-
-> 💡 **Dica**: `docker system prune -a --volumes` remove:
-> - Containers parados
-> - Imagens não utilizadas
-> - Volumes não utilizados  
-> - Redes não utilizadas
-> - Cache de build
-
 ### Script de Limpeza Completa
 
 ```bash
-# Deletar todas as suas aplicações do Kubernetes
+# Deletar todas as suas aplicações
 kubectl delete namespace siscom-v1 ideal siga --ignore-not-found=true
 
 # Aguardar finalizar
 sleep 10
 
-# Limpar imagens antigas do Minikube
+# Limpar imagens antigas
 for img in $(minikube image ls | grep -E "(siscom|ideal|siga)" | awk '{print $1}'); do
     minikube image rm "$img" 2>/dev/null || true
 done
 
-# Parar containers Docker Compose (se existirem)
-cd /home/call/projects/ideal && docker compose down -v 2>/dev/null || true
-cd /home/call/projects/siscom-v1 && docker compose down -v 2>/dev/null || true
-cd /home/call/projects/siga && docker compose down -v 2>/dev/null || true
-
-# Remover imagens Docker do host
-docker rmi $(docker images | grep -E "(siscom|ideal|siga)" | awk '{print $3}') 2>/dev/null || true
-
-# Limpeza geral Docker
-docker system prune -a --volumes --force
-
-echo "✅ Ambiente completamente limpo!"
+echo "✅ Ambiente limpo!"
 ```
 
 > ⚠️ **Atenção**: Deletar um namespace **remove TODOS os dados** (incluindo banco de dados). Use com cuidado!
